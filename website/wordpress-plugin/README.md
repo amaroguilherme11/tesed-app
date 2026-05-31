@@ -66,3 +66,26 @@ Produtos sem um destes SKU são ignorados (não geram código).
 - A correspondência produto→plano vive nos SKU; gerir é tão simples como editar o
   SKU do produto.
 - Toda a comunicação com a Tesed é HTTPS e autenticada por segredo.
+
+## Segurança (para revisão pela equipa que mantém o WordPress)
+
+Este é um plugin **próprio, pequeno e de superfície mínima** — não um plugin de
+marketplace. Avaliação de risco:
+
+- **Sem endpoints públicos.** O plugin não regista rotas REST, shortcodes nem
+  formulários. Não recebe input de visitantes anónimos. Só reage a um gancho
+  interno do WooCommerce (`woocommerce_payment_complete`), que é disparado por um
+  pagamento legítimo já validado pelo fluxo Ifthenpay existente.
+- **Não processa pagamentos nem dados de cartão.** Apenas lê o SKU de uma
+  encomenda já paga e faz **uma chamada HTTPS de saída** autenticada por segredo.
+- **Sem acesso a dados clínicos.** Não toca na base de dados da app Tesed; o
+  endpoint remoto só gera códigos (mesmo que o segredo vazasse, o impacto máximo
+  seria gerar códigos de subscrição — nunca aceder a dados de pacientes).
+- **Auditável:** ~200 linhas, podem ser revistas pela equipa antes de instalar.
+- **Segredo rotacionável:** o `TESED_PAYMENT_SECRET` pode ser trocado nos dois
+  lados a qualquer momento, sem alterar código.
+
+> Recomendação: submeter este plugin ao mesmo processo de revisão de código que
+> a equipa aplica aos restantes, e incluí-lo nas verificações periódicas de
+> compatibilidade com novas versões do WooCommerce/WordPress (risco de
+> manutenção, não de exposição).
