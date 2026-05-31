@@ -4,24 +4,29 @@
 > Explica como, após um pagamento confirmado pelo Ifthenpay, é gerado o
 > **código de subscrição** que o cliente resgata na app Tesed.
 
+> **Contexto:** o website é **WordPress + WooCommerce** e **já** tem o fluxo de
+> pagamento WooCommerce ↔ Ifthenpay a funcionar. **NÃO mexemos nesse fluxo.**
+> A integração com a app faz-se através de um **plugin WordPress** que fornecemos
+> (`website/wordpress-plugin/`), que apenas reage *depois* do pagamento concluído.
+> Para a via genérica (sem WooCommerce), ver o Anexo A.
+
 ---
 
-## 1. Visão geral do fluxo
+## 1. Visão geral do fluxo (WooCommerce)
 
 ```
-1. Cliente escolhe um plano no WEBSITE e paga via Ifthenpay (MB WAY / Multibanco).
-2. Ifthenpay confirma o pagamento ao SERVIDOR do website (callback Ifthenpay).
-3. O servidor do website traduz a encomenda em (plano, meses) e chama
-   o endpoint da Tesed (HTTPS + segredo).
-4. A Tesed gera um código único (ex.: TESED-AB12-CD34) e devolve-o em JSON.
-5. O website entrega o código ao cliente: página de sucesso + email.
-6. O cliente abre a app Tesed → Subscrição → insere o código → subscrição ativa.
+[JÁ EXISTE] Cliente compra no WooCommerce e paga via Ifthenpay (MB WAY/Multibanco).
+[JÁ EXISTE] Ifthenpay confirma → WooCommerce marca a encomenda como PAGA.
+[NOVO]      O plugin Tesed reage ao gancho "pagamento concluído":
+            - lê o SKU de cada produto comprado → deduz (plano, meses);
+            - chama o endpoint da Tesed (HTTPS + segredo);
+            - recebe o código e mostra-o na página de obrigado + email.
+[APP]       O cliente abre a app Tesed → Subscrição → insere o código → ativa.
 ```
 
-**Porque é que o servidor do website está no meio (passo 3)?**
-O callback do Ifthenpay diz *"o pedido Nº 1234 de 49,90€ foi pago"* — **não diz**
-"Plano Família 12 meses". Só o website sabe a que produto corresponde o pedido
-1234. Por isso é o servidor do website que traduz e nos diz `plan` e `months`.
+O **plugin não altera** o checkout nem o callback Ifthenpay já existentes —
+encaixa-se apenas no momento em que a encomenda fica paga (ganchos padrão do
+WooCommerce: `woocommerce_payment_complete` / `order_status_completed`).
 
 A Tesed **nunca** processa pagamentos nem recebe dados de cartão — só a
 confirmação de que um pagamento aconteceu, e devolve um código.
@@ -69,109 +74,69 @@ sem criar outro. A empresa pode repetir a chamada com segurança.
 
 ---
 
-## 3. Configurar o Ifthenpay (lado da empresa)
+## 3. Instalar e configurar o plugin (lado do website)
 
-A empresa precisa de uma conta Ifthenpay com os métodos pretendidos ativos
-(**MB WAY** e/ou **Multibanco**), e respetivas chaves (MB WAY key, Entidade +
-Subentidade para Multibanco). Estas chaves ficam **no servidor do website**, não
-são partilhadas com a Tesed.
+O fluxo Ifthenpay↔WooCommerce **já existe e não se altera**. Só é preciso
+instalar o plugin que faz a ponte para a app.
 
-### 3.1 Callback de confirmação (anti-phishing)
-No **backoffice do Ifthenpay**, em cada método de pagamento, configura-se:
-- **URL de callback**: o endereço do **servidor do website** que recebe a
-  confirmação (ex.: `https://www.<empresa>.pt/api/ifthenpay/callback`).
-- **Chave anti-phishing**: um segredo que o Ifthenpay inclui no callback para o
-  website confirmar que o pedido é legítimo.
+1. **Instalar o plugin** `website/wordpress-plugin/` (ver o README dessa pasta):
+   copiar para `wp-content/plugins/` ou instalar via ZIP, e **ativar**.
+2. **Configurar** em **Definições → Tesed Subscrições**:
+   - **URL do endpoint Tesed** (fornecido pela equipa Tesed após o deploy).
+   - **Segredo partilhado** (fornecido pela equipa Tesed, em canal seguro).
+3. **Definir os SKU** dos produtos de subscrição (ver §5).
 
-O Ifthenpay chama esse URL (tipicamente **GET**) com parâmetros como:
-```
-?key=[CHAVE_ANTI_PHISHING]
-&orderId=[REFERENCIA_DA_ENCOMENDA_DO_WEBSITE]
-&amount=[VALOR]
-&requestId=[ID_DO_PAGAMENTO_IFTHENPAY]
-&payment_datetime=[DATA_HORA]
-... (campos variam por método: entity, reference para Multibanco, etc.)
-```
-
-> ⚠️ Os nomes/conjunto exatos de parâmetros dependem do método e da versão da
-> API Ifthenpay. A empresa deve confirmar no painel/documentação Ifthenpay
-> deles. O essencial: o callback traz a **referência da encomenda** (`orderId`)
-> e o **id do pagamento** (`requestId`), e a **chave anti-phishing** (`key`).
-
-### 3.2 O que o servidor do website faz ao receber o callback
-1. **Validar a chave anti-phishing** (`key`) — recusar se não bater.
-2. Procurar a encomenda pelo `orderId` na base de dados do website.
-3. Confirmar que o `amount` corresponde ao preço esperado desse produto
-   (boa prática anti-fraude).
-4. Traduzir o produto em `plan` e `months` (ver §5).
-5. Chamar o endpoint da Tesed (§2) com:
-   - `payment_ref` = o `requestId` do Ifthenpay (ou o `orderId`, desde que único).
-   - `plan` e `months` do produto.
-6. Receber o `code` e **entregá-lo ao cliente** (página de sucesso + email).
-7. (Opcional) Guardar o `code` na encomenda, para reenvio/suporte.
+O plugin trata de tudo o resto: reage ao pagamento concluído, gera o código,
+mostra-o na página de obrigado e inclui-o no email do WooCommerce ao cliente.
 
 ---
 
-## 4. `payment_ref` — qual usar?
-Deve ser um identificador **único e estável** do pagamento, para a idempotência
-funcionar. Recomendação, por ordem de preferência:
-1. `requestId` do Ifthenpay (id único do pagamento).
-2. Se não houver, o `orderId` da encomenda do website (desde que cada encomenda
-   pague uma só vez).
-
-Usar sempre o **mesmo** valor caso o callback se repita para o mesmo pagamento.
+## 4. `payment_ref` (idempotência) — tratado pelo plugin
+O plugin usa uma referência única e estável por linha de encomenda
+(`wc_<encomenda>_<item>_<n>`). Se o WooCommerce reprocessar a encomenda, a Tesed
+devolve o **mesmo** código (não duplica). Não é preciso configurar nada.
 
 ---
 
-## 5. Mapeamento de produtos → (plan, months)
-A empresa mantém esta correspondência (no website). Exemplo para os 6 produtos:
+## 5. Mapeamento de produtos → (plan, months) por SKU
+Definir o **SKU** de cada produto de subscrição no WooCommerce
+(**Produto → Inventário → SKU**):
 
-| Produto no website            | `plan`       | `months` |
-|-------------------------------|--------------|----------|
-| Individual — 3 meses          | `individual` | `3`      |
-| Individual — 6 meses          | `individual` | `6`      |
-| Individual — 12 meses         | `individual` | `12`     |
-| Família — 3 meses             | `family`     | `3`      |
-| Família — 6 meses             | `family`     | `6`      |
-| Família — 12 meses            | `family`     | `12`     |
+| Produto no website     | SKU             | `plan`       | `months` |
+|------------------------|-----------------|--------------|----------|
+| Individual — 3 meses   | `TESED-IND-03`  | `individual` | `3`      |
+| Individual — 6 meses   | `TESED-IND-06`  | `individual` | `6`      |
+| Individual — 12 meses  | `TESED-IND-12`  | `individual` | `12`     |
+| Família — 3 meses      | `TESED-FAM-03`  | `family`     | `3`      |
+| Família — 6 meses      | `TESED-FAM-06`  | `family`     | `6`      |
+| Família — 12 meses     | `TESED-FAM-12`  | `family`     | `12`     |
 
-> Os **preços** de cada produto são definidos pela empresa (questão em aberto no
-> projeto). A Tesed não precisa do preço — só de `plan` e `months`.
+Produtos sem um destes SKU são ignorados (não geram código). Os **preços** são
+definidos pela empresa; a Tesed não precisa do preço — só de `plan` e `months`.
 
 ---
 
-## 6. Exemplo de chamada (do servidor do website para a Tesed)
+## 6. Endpoint da Tesed (referência técnica)
+
+O plugin chama, por baixo, este endpoint (não é preciso fazê-lo à mão):
 
 ```bash
 curl -X POST "https://<PROJETO>.supabase.co/functions/v1/ifthenpay-callback" \
   -H "Authorization: Bearer <SEGREDO_PARTILHADO>" \
   -H "content-type: application/json" \
-  -d '{"payment_ref":"ITP-REQ-998877","plan":"family","months":12}'
+  -d '{"payment_ref":"wc_1234_56_0","plan":"family","months":12}'
 ```
 Resposta:
 ```json
 { "ok": true, "code": "TESED-AB12-CD34", "plan": "family", "months": 12, "status": "active" }
 ```
 
-Pseudocódigo (servidor do website, Node.js):
-```js
-// Dentro do handler do callback do Ifthenpay, JÁ depois de validar a key
-// anti-phishing e de mapear o produto:
-const r = await fetch(`${TESED_URL}/functions/v1/ifthenpay-callback`, {
-  method: "POST",
-  headers: {
-    "Authorization": `Bearer ${TESED_SHARED_SECRET}`,
-    "content-type": "application/json",
-  },
-  body: JSON.stringify({ payment_ref: requestId, plan, months }),
-});
-const { code } = await r.json();
-// mostrar `code` na página de sucesso + enviar por email ao cliente
-```
-
 ---
 
-## 7. Email ao cliente (sugestão de conteúdo)
+## 7. Email ao cliente
+O plugin inclui automaticamente o código no **email de encomenda concluída** do
+WooCommerce (e na página de "Obrigado"). Não é preciso configurar emails à parte
+— usa o sistema de emails que o site já tem. Conteúdo (sugestão):
 > Assunto: O seu código de subscrição Tesed
 >
 > Olá! O seu pagamento foi confirmado. O seu código de subscrição é:
@@ -194,17 +159,17 @@ que a empresa já utiliza.)
 - [ ] `supabase functions deploy ifthenpay-callback`.
 - [ ] Entregar à empresa: URL do endpoint + segredo partilhado (em canal seguro).
 
-**Empresa (website + Ifthenpay):**
-- [ ] Conta Ifthenpay com MB WAY/Multibanco ativos.
-- [ ] Configurar URL de callback + chave anti-phishing no backoffice Ifthenpay.
-- [ ] No callback: validar `key`, confirmar `amount`, mapear produto → (plan, months).
-- [ ] Chamar o endpoint Tesed com `payment_ref`, `plan`, `months`.
-- [ ] Mostrar o código na página de sucesso + enviar por email.
+**Empresa (WordPress/WooCommerce):**
+- [ ] Confirmar que o fluxo Ifthenpay↔WooCommerce já funciona (já existe).
+- [ ] Instalar e ativar o plugin `website/wordpress-plugin/`.
+- [ ] Preencher URL do endpoint + segredo em **Definições → Tesed Subscrições**.
+- [ ] Definir os SKU dos 6 produtos (§5).
 
-**Teste conjunto:**
-- [ ] Pagamento de teste (ambiente de testes Ifthenpay) → callback → código gerado.
+**Teste conjunto (ambiente de testes Ifthenpay):**
+- [ ] Compra de teste → encomenda paga → código aparece na página de obrigado.
+- [ ] Email de encomenda concluída inclui o código.
 - [ ] Resgatar o código na app → subscrição ativa.
-- [ ] Repetir o callback (mesma `payment_ref`) → mesmo código (idempotência).
+- [ ] Reprocessar a encomenda → mesmo código (idempotência).
 
 ---
 
@@ -215,3 +180,12 @@ que a empresa já utiliza.)
 - Segredo partilhado tratado como password (rotação possível a pedido).
 - Só uma chamada **autenticada** (segredo) pode gerar um código pago — o código
   nunca é gerado no browser/cliente (regra de segurança central do projeto).
+
+---
+
+## Anexo A — Integração genérica (sem WooCommerce)
+Se algum fluxo não passar pelo WooCommerce, o endpoint pode ser chamado
+diretamente a partir de qualquer servidor (ver §6), desde que se envie
+`payment_ref` (único), `plan` e `months`, com o segredo no cabeçalho
+`Authorization: Bearer`. O servidor que chama é responsável por validar o
+pagamento antes de chamar.
