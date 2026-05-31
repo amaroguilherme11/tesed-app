@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { Profile } from '@/lib/types';
+import { registerForPush, unregisterForPush } from '@/lib/notifications';
 
 type AuthState = {
   session: Session | null;
@@ -52,6 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(data.session);
       if (data.session) {
         setProfile(await fetchProfile(data.session.user.id));
+        registerForPush();
       }
       setLoading(false);
     });
@@ -59,6 +61,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: sub } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
       setSession(newSession);
       setProfile(newSession ? await fetchProfile(newSession.user.id) : null);
+      // Regista o dispositivo para push quando há sessão (no-op em Expo Go/web).
+      if (newSession) registerForPush();
     });
 
     return () => {
@@ -105,6 +109,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    // Remove o token deste dispositivo antes de sair (não recebe push de outra conta).
+    await unregisterForPush();
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   };
