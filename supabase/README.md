@@ -20,7 +20,8 @@ supabase/
 │   ├── 0010_admin_metrics.sql       # Métricas do painel do médico (Fase 6)
 │   ├── 0011_dob_and_doctor_inbox.sql # Data de nascimento + idade/titular na inbox
 │   ├── 0012_family_member_profiles.sql # Perfis de dependentes (família sem email)
-│   └── 0013_member_dob_required.sql  # Data de nascimento obrigatória nos membros
+│   ├── 0013_member_dob_required.sql  # Data de nascimento obrigatória nos membros
+│   └── 0014_paid_codes.sql          # Códigos pagos (Fase 5): create_paid_code
 ├── functions/                 # edge functions (webhooks pagos -> Fase 5)
 └── scripts/
     ├── seed-doctor.mjs        # convite do médico (sem definir password)

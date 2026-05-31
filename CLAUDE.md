@@ -121,7 +121,19 @@ não respondidas), pacientes, subscrições (ativas/expiradas/individual/famíli
 cabeçalho do médico. Ficheiros: `0010_admin_metrics.sql`,
 `screens/doctor/DashboardScreen.tsx`.
 
-Próximo passo: **Fase 5 — Website + pagamentos**. NOTAS IMPORTANTES (decididas pelo cliente):
+**Fase 5 — Pagamentos (Ifthenpay): backend implementado (a fazer deploy/integrar).**
+Decisão: Edge Function no nosso Supabase (a empresa do website chama-a). O código pago
+só nasce de chamada de servidor verificada por **segredo partilhado** (regra nº 2).
+- `0014_paid_codes.sql`: `create_paid_code(payment_ref, plan, months)` — idempotente
+  (mesma `payment_ref` nunca gera 2 códigos), só executável pela `service_role`.
+- `supabase/functions/ifthenpay-callback/`: endpoint que a empresa chama após pagamento
+  confirmado; autentica por `TESED_PAYMENT_SECRET`, devolve o código gerado.
+- Entrega ao cliente: email + página de sucesso (responsabilidade da empresa).
+- Especificação para a empresa: `docs/INTEGRACAO-PAGAMENTOS.md`. Deploy: `supabase/functions/README.md`.
+Falta (depende de externos): fazer deploy da função, definir o segredo, e a empresa
+ligar o callback do Ifthenpay ao endpoint.
+
+NOTAS IMPORTANTES (decididas pelo cliente):
 - **O website JÁ ESTÁ criado pela empresa** — não construímos o site de raiz; integramos
   com o existente (página de planos já existe). O nosso foco é o **webhook** que, após
   pagamento confirmado, gera o código pago em `subscription_codes` (origin='paid_website')
