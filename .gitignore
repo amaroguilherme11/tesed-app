@@ -8,6 +8,8 @@ web-build/
 .env
 .env.*
 !.env.example
+SEGREDOS-LOCAIS.txt
+*-segredos.txt
 
 # Supabase
 supabase/.temp/
@@ -21,6 +23,9 @@ npm-debug.log*
 
 # Ficheiros temporários de desenvolvimento (QR de teste, etc.)
 abrir-app.html
+
+# Artefacto gerado do plugin (o .php fonte é que está versionado)
+website/wordpress-plugin/*.zip
 
 # Builds nativos
 ios/
