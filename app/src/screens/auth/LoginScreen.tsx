@@ -1,10 +1,13 @@
 import { useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, StyleSheet, Text, View } from 'react-native';
 import { Screen } from '@/components/Screen';
 import { TextField } from '@/components/TextField';
 import { Button } from '@/components/Button';
 import { useAuth } from '@/contexts/AuthContext';
 import { colors, fontSize, spacing } from '@/theme';
+
+// Logótipo oficial Tesed (horizontal).
+const logo = require('../../../assets/logo.png');
 
 export function LoginScreen({ navigation }: any) {
   const { signIn } = useAuth();
@@ -25,7 +28,7 @@ export function LoginScreen({ navigation }: any) {
 
   return (
     <Screen>
-      <Text style={styles.title}>Tesed</Text>
+      <Image source={logo} style={styles.logo} resizeMode="contain" />
       <Text style={styles.subtitle}>Comunicação com o seu médico, sem se perder nada.</Text>
 
       <View style={styles.form}>
@@ -61,8 +64,8 @@ export function LoginScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: fontSize.xl, fontWeight: '700', color: colors.primary, marginTop: spacing.xl },
-  subtitle: { fontSize: fontSize.base, color: colors.textMuted, marginTop: spacing.sm },
+  logo: { width: '70%', height: 90, alignSelf: 'center', marginTop: spacing.xl },
+  subtitle: { fontSize: fontSize.base, color: colors.textMuted, marginTop: spacing.md, textAlign: 'center' },
   form: { marginTop: spacing.xl },
   footer: { marginTop: 'auto', alignItems: 'center', paddingTop: spacing.xl },
   footerText: { color: colors.textMuted, fontSize: fontSize.sm },

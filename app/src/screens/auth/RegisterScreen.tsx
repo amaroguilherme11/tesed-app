@@ -3,6 +3,7 @@ import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Screen } from '@/components/Screen';
 import { TextField } from '@/components/TextField';
 import { DateField, parseDateBR } from '@/components/DateField';
+import { PhoneField, composePhone } from '@/components/PhoneField';
 import { Button } from '@/components/Button';
 import { useAuth } from '@/contexts/AuthContext';
 import { colors, fontSize, radius, spacing } from '@/theme';
@@ -12,6 +13,8 @@ export function RegisterScreen({ navigation }: any) {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [dob, setDob] = useState('');
+  const [dial, setDial] = useState('351'); // Portugal por defeito
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [consent, setConsent] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -21,6 +24,10 @@ export function RegisterScreen({ navigation }: any) {
     const isoDob = parseDateBR(dob);
     if (!isoDob) {
       return Alert.alert('Data inválida', 'Indica a data de nascimento no formato DD/MM/AAAA.');
+    }
+    const phone = composePhone(dial, phoneNumber);
+    if (!phone) {
+      return Alert.alert('Telemóvel inválido', 'Indica um número de telemóvel válido.');
     }
     if (password.length < 8) {
       return Alert.alert('Password fraca', 'A password deve ter pelo menos 8 caracteres.');
@@ -33,6 +40,7 @@ export function RegisterScreen({ navigation }: any) {
         fullName: fullName.trim(),
         consent,
         dateOfBirth: isoDob,
+        phone,
       });
       if (needsConfirmation) {
         // Confirmação de email ativa: ainda não há sessão. Volta ao login.
@@ -58,6 +66,13 @@ export function RegisterScreen({ navigation }: any) {
       <View style={styles.form}>
         <TextField label="Nome completo" value={fullName} onChangeText={setFullName} />
         <DateField label="Data de nascimento" value={dob} onChangeText={setDob} />
+        <PhoneField
+          label="Telemóvel"
+          dial={dial}
+          onChangeDial={setDial}
+          number={phoneNumber}
+          onChangeNumber={setPhoneNumber}
+        />
         <TextField
           label="Email"
           value={email}

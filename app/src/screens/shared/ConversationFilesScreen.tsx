@@ -67,7 +67,6 @@ function FileRow({ item, mine }: { item: FileItem; mine: boolean }) {
   };
   return (
     <Pressable onPress={open} style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}>
-      <Text style={styles.icon}>📎</Text>
       <View style={styles.info}>
         <Text style={styles.name} numberOfLines={1}>
           {item.file_name}

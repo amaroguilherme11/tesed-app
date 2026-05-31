@@ -8,6 +8,7 @@ import { CodesScreen } from '@/screens/doctor/CodesScreen';
 import { DashboardScreen } from '@/screens/doctor/DashboardScreen';
 import { HeaderSignOutButton } from '@/components/HeaderSignOutButton';
 import { HeaderTextButton } from '@/components/HeaderTextButton';
+import { HeaderLogoTitle } from '@/components/HeaderLogoTitle';
 import { colors, spacing } from '@/theme';
 
 const Stack = createNativeStackNavigator();
@@ -25,9 +26,9 @@ export function DoctorNavigator() {
         name="DoctorInbox"
         component={DoctorInboxScreen}
         options={({ navigation }: any) => ({
-          title: 'Conversas',
+          headerTitle: () => <HeaderLogoTitle title="Conversas" />,
           headerRight: () => (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.md }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
               <HeaderTextButton label="Painel" onPress={() => navigation.navigate('Dashboard')} />
               <HeaderTextButton label="Códigos" onPress={() => navigation.navigate('Codes')} />
               <HeaderSignOutButton />

@@ -76,12 +76,17 @@ export function DoctorInboxScreen({ navigation }: any) {
 
   const openGroup = (group: InboxGroup) => {
     if (group.isFamily) {
-      navigation.navigate('FamilyChats', { ownerName: group.ownerName, ownerId: group.ownerId });
+      navigation.navigate('FamilyChats', {
+        ownerName: group.ownerName,
+        ownerId: group.ownerId,
+        ownerPhone: group.ownerPhone,
+      });
     } else {
       const chat = group.chats[0];
       navigation.navigate('Conversation', {
         conversationId: chat.conversationId,
         patientName: group.ownerName,
+        patientPhone: group.ownerPhone,
       });
     }
   };

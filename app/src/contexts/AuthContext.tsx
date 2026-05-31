@@ -21,6 +21,8 @@ type AuthState = {
     consent: boolean;
     /** ISO YYYY-MM-DD (opcional). */
     dateOfBirth?: string | null;
+    /** Telemóvel canónico "+351 912345678". */
+    phone?: string | null;
   }) => Promise<{ needsConfirmation: boolean }>;
   refreshProfile: () => Promise<void>;
 };
@@ -82,13 +84,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fullName,
     consent,
     dateOfBirth,
+    phone,
   }) => {
     if (!consent) {
       throw new Error('É necessário aceitar a política de privacidade para continuar.');
     }
-    // Passamos nome, data de nascimento e consentimento na metadata do signup:
-    // o trigger handle_new_user cria o perfil e regista tudo de forma fiável,
-    // mesmo com confirmação de email ativa (ainda sem sessão no cliente).
+    // Passamos nome, data de nascimento, telemóvel e consentimento na metadata
+    // do signup: o trigger handle_new_user cria o perfil e regista tudo de forma
+    // fiável, mesmo com confirmação de email ativa (ainda sem sessão no cliente).
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -97,6 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           full_name: fullName,
           consent: 'true',
           date_of_birth: dateOfBirth ?? '',
+          phone: phone ?? '',
         },
       },
     });

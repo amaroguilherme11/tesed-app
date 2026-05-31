@@ -22,7 +22,7 @@ import { MemberProfile, MySubscription } from '@/lib/types';
 import { colors, spacing, fontSize, radius, shadow } from '@/theme';
 
 const LOCK_MESSAGE =
-  'Precisas de uma subscrição ativa para enviar mensagens e ficheiros. Toca em 🎟️ para inserir um código.';
+  'Precisas de uma subscrição ativa para enviar mensagens e ficheiros. Toca em "Gestão" para inserir um código.';
 const FAMILY_MAX = 6;
 
 type ChatItem = {
@@ -73,7 +73,7 @@ export function PatientHomeScreen({ navigation }: any) {
     navigation.setOptions({
       headerRight: () => (
         <View style={styles.headerRow}>
-          <HeaderTextButton label="🎟️" onPress={() => navigation.navigate('Subscription')} />
+          <HeaderTextButton label="Gestão" onPress={() => navigation.navigate('Subscription')} />
           {!isFamily && personalConvId && (
             <HeaderFilesButton
               onPress={() =>

@@ -125,7 +125,7 @@ export function ChatView({
             {uploading ? (
               <ActivityIndicator size="small" color={colors.primary} />
             ) : (
-              <Text style={styles.attachIcon}>📎</Text>
+              <Text style={styles.attachIcon}>＋</Text>
             )}
           </Pressable>
           <TextInput

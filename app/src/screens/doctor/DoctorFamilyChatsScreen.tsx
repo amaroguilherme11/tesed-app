@@ -11,7 +11,7 @@ import { colors, fontSize, radius, shadow, spacing } from '@/theme';
  * route.params = { ownerId, ownerName }
  */
 export function DoctorFamilyChatsScreen({ route, navigation }: any) {
-  const { ownerId, ownerName } = route.params;
+  const { ownerId, ownerName, ownerPhone } = route.params;
   const { groups, loading } = useConversations();
   const group = groups.find((g) => g.ownerId === ownerId);
 
@@ -33,6 +33,8 @@ export function DoctorFamilyChatsScreen({ route, navigation }: any) {
     navigation.navigate('Conversation', {
       conversationId: chat.conversationId,
       patientName: chat.isPersonal ? `${ownerName} (titular)` : chat.label,
+      // O telemóvel é do TITULAR (dependentes não têm número próprio).
+      patientPhone: ownerPhone,
     });
   };
 

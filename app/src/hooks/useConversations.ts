@@ -35,6 +35,7 @@ export function useConversations() {
           ownerId: r.patient_id,
           ownerName: r.owner_name ?? 'Paciente',
           ownerDob: r.owner_dob,
+          ownerPhone: r.owner_phone,
           isFamily: r.is_family,
           chats: [],
           unansweredCount: 0,

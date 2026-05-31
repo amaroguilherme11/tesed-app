@@ -1,5 +1,5 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
-import { colors, radius, spacing, fontSize } from '@/theme';
+import { colors, radius, spacing, fontSize, fonts } from '@/theme';
 
 type Props = {
   title: string;
@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
   ghost: { backgroundColor: 'transparent' },
   disabled: { opacity: 0.5 },
   pressed: { opacity: 0.85 },
-  text: { fontSize: fontSize.base, fontWeight: '600' },
+  text: { fontSize: fontSize.base, fontFamily: fonts.display },
   textPrimary: { color: colors.white },
   textGhost: { color: colors.primary },
 });

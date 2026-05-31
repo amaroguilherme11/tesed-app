@@ -118,6 +118,7 @@ export type InboxRow = {
   created_at: string;
   owner_name: string | null;
   owner_dob: string | null;
+  owner_phone: string | null;
   member_name: string | null;
   member_dob: string | null;
   is_family: boolean;
@@ -138,6 +139,7 @@ export type InboxGroup = {
   ownerId: string;
   ownerName: string;
   ownerDob: string | null;
+  ownerPhone: string | null;
   isFamily: boolean;
   chats: InboxChat[];
   unansweredCount: number;

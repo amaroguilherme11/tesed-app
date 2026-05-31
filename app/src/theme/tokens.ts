@@ -2,30 +2,36 @@
  * Design tokens do Tesed — ÚNICO sítio para cores, fontes e medidas.
  * (CLAUDE.md, regra nº 7 + ARQUITETURA.md secção 11.)
  *
- * PLACEHOLDERS — substituir pelos valores oficiais da marca Tesed.
- * Trocar aqui aplica a identidade em toda a app.
+ * Valores OFICIAIS da marca (Manual de Identidade e Normas Gráficas Tesed):
+ *   - Azul-esverdeado (turquesa): #009EAB  (Pantone 2397C)
+ *   - Cinza-escuro:               #383837  (Pantone 2336C)
+ *   - Fonte: Quicksand (geométrica sans-serif; Regular e Medium)
  */
 
 export const colors = {
-  primary: '#0E7C7B',
-  primaryDark: '#075E5D',
-  accent: '#F2A541',
+  /** Cor corporativa Tesed (turquesa). */
+  primary: '#009EAB',
+  primaryDark: '#007E89',
+  accent: '#00C2D1',
   /** Destaque de conversa NÃO respondida — central no produto. */
   unanswered: '#E8503A',
-  bg: '#F7F9F9',
+  bg: '#F4F8F9',
   surface: '#FFFFFF',
-  text: '#14211F',
-  textMuted: '#5C6B68',
-  border: '#E2E8E7',
+  /** Texto principal — cinza-escuro oficial. */
+  text: '#383837',
+  textMuted: '#6E7A7B',
+  border: '#E1E9EA',
   white: '#FFFFFF',
   danger: '#E8503A',
 } as const;
 
 export const fonts = {
-  /** Fonte de títulos da marca (placeholder: usa a do sistema por agora). */
-  display: undefined as string | undefined,
-  /** Fonte de corpo da marca (placeholder). */
-  body: undefined as string | undefined,
+  /** Títulos da marca — Quicksand Medium/Bold. */
+  display: 'Quicksand_600SemiBold',
+  displayBold: 'Quicksand_700Bold',
+  /** Corpo — Quicksand Regular/Medium. */
+  body: 'Quicksand_500Medium',
+  bodyRegular: 'Quicksand_400Regular',
 } as const;
 
 export const radius = {

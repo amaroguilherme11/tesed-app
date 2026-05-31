@@ -1,5 +1,5 @@
 import { StyleSheet, Text, TextInput, TextInputProps, View } from 'react-native';
-import { colors, radius, spacing, fontSize } from '@/theme';
+import { colors, radius, spacing, fontSize, fonts } from '@/theme';
 
 type Props = TextInputProps & {
   label: string;
@@ -24,7 +24,7 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     color: colors.textMuted,
     marginBottom: spacing.xs,
-    fontWeight: '600',
+    fontFamily: fonts.display,
   },
   input: {
     height: 52,
@@ -35,5 +35,6 @@ const styles = StyleSheet.create({
     fontSize: fontSize.base,
     color: colors.text,
     backgroundColor: colors.surface,
+    fontFamily: fonts.bodyRegular,
   },
 });

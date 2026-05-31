@@ -40,7 +40,6 @@ function AttachmentRow({ attachment, mine }: { attachment: Attachment; mine: boo
 
   return (
     <Pressable onPress={open} style={[styles.attach, mine ? styles.attachMine : styles.attachOther]}>
-      <Text style={[styles.attachIcon, mine && styles.bodyMine]}>📎</Text>
       <View style={styles.attachInfo}>
         <Text style={[styles.attachName, mine && styles.bodyMine]} numberOfLines={1}>
           {attachment.file_name}
@@ -100,7 +99,6 @@ const styles = StyleSheet.create({
   },
   attachMine: { backgroundColor: 'rgba(255,255,255,0.18)' },
   attachOther: { backgroundColor: colors.bg },
-  attachIcon: { fontSize: fontSize.lg },
   attachInfo: { flex: 1 },
   attachName: { fontSize: fontSize.sm, fontWeight: '600', color: colors.text },
   attachMeta: { fontSize: 11, color: colors.textMuted, marginTop: 1 },
