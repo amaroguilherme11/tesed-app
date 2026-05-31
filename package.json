@@ -1,0 +1,17 @@
+{
+  "name": "tesed",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Tesed — app de comunicação assíncrona médico-paciente (monorepo)",
+  "workspaces": [
+    "app",
+    "website"
+  ],
+  "scripts": {
+    "app": "npm run start --workspace app",
+    "website": "npm run dev --workspace website"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

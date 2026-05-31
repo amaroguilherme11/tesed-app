@@ -1,0 +1,31 @@
+# Dependências
+node_modules/
+.expo/
+dist/
+web-build/
+
+# Ambiente / segredos (NUNCA commitar)
+.env
+.env.*
+!.env.example
+
+# Supabase
+supabase/.temp/
+supabase/.branches/
+
+# Sistema
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+
+# Ficheiros temporários de desenvolvimento (QR de teste, etc.)
+abrir-app.html
+
+# Builds nativos
+ios/
+android/
+
+# Next.js
+.next/
+out/

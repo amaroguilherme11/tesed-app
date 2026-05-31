@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Write-Output \"files:\"; \\(Get-ChildItem -Recurse -File \"C:\\\\Users\\\\Amaro\\\\Desktop\\\\tesed\" -ErrorAction SilentlyContinue | Measure-Object\\).Count)"
+    ]
+  }
+}

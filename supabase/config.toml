@@ -1,0 +1,28 @@
+# Configuração local do Supabase CLI (desenvolvimento).
+# Em produção usa-se um projeto Supabase na região UE (ex.: Frankfurt) — RGPD.
+project_id = "tesed"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public"]
+
+[db]
+port = 54322
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+
+[auth]
+enabled = true
+# URL base da app para os links de email (ajustar conforme o ambiente).
+site_url = "http://localhost:8081"
+# Registo livre de pacientes (o médico é convidado, não se auto-regista).
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+enable_confirmations = true
