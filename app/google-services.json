@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "508725732177",
+    "project_id": "chat-consultas-d32c3",
+    "storage_bucket": "chat-consultas-d32c3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:508725732177:android:99f0963dd523e6e4886970",
+        "android_client_info": {
+          "package_name": "pt.tesed.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "508725732177-5rngu0b2455vl68dufv7p0haooi4rua9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDem5nEHc2urxYrIdBxKiB9WiecAEzc3xA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "508725732177-5rngu0b2455vl68dufv7p0haooi4rua9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

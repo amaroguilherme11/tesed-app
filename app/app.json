@@ -14,7 +14,8 @@
     },
     "android": {
       "package": "pt.tesed.app",
-      "softwareKeyboardLayoutMode": "pan",
+      "softwareKeyboardLayoutMode": "resize",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#009EAB"
@@ -37,9 +38,15 @@
         "expo-splash-screen",
         {
           "image": "./assets/splash-symbol.png",
-          "imageWidth": 180,
+          "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#FFFFFF"
+          "backgroundColor": "#FFFFFF",
+          "dark": {
+            "image": "./assets/splash-symbol.png",
+            "imageWidth": 200,
+            "resizeMode": "contain",
+            "backgroundColor": "#FFFFFF"
+          }
         }
       ]
     ],

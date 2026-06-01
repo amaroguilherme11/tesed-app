@@ -1,9 +1,9 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   FlatList,
-  KeyboardAvoidingView,
+  Keyboard,
   Platform,
   Pressable,
   StyleSheet,
@@ -12,7 +12,6 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useHeaderHeight } from '@react-navigation/elements';
 import { useChat } from '@/hooks/useChat';
 import { useAuth } from '@/contexts/AuthContext';
 import { MessageBubble } from '@/components/MessageBubble';
@@ -44,7 +43,28 @@ export function ChatView({
   const listRef = useRef<FlatList>(null);
   const locked = !!lockedReason;
   const insets = useSafeAreaInsets();
-  const headerHeight = useHeaderHeight();
+  // Altura do teclado, gerida manualmente (mais fiável que KeyboardAvoidingView
+  // no Android edge-to-edge do SDK 54). Empurramos o compositor para cima por
+  // este valor quando o teclado está visível.
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    const showEvt = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvt = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showSub = Keyboard.addListener(showEvt, (e) => {
+      // No Android, a safe-area inferior já está "dentro" da altura do teclado,
+      // por isso descontamo-la para não duplicar o espaço.
+      const h = e.endCoordinates?.height ?? 0;
+      setKeyboardHeight(Math.max(0, h - (Platform.OS === 'android' ? insets.bottom : 0)));
+      // Mantém a última mensagem visível.
+      setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50);
+    });
+    const hideSub = Keyboard.addListener(hideEvt, () => setKeyboardHeight(0));
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, [insets.bottom]);
 
   const onSend = async () => {
     const body = text.trim();
@@ -89,15 +109,12 @@ export function ChatView({
     );
   }
 
+  // Espaço inferior do compositor: safe-area quando o teclado está fechado;
+  // quando aberto, a altura do teclado (empurra a barra para cima dele).
+  const composerBottom = keyboardHeight > 0 ? keyboardHeight : insets.bottom;
+
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      // 'padding' em ambas as plataformas + o offset do cabeçalho garantem que o
-      // teclado empurra a barra de escrita para cima (em vez de a tapar). No
-      // Android edge-to-edge, o headerHeight inclui a status bar.
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={headerHeight}
-    >
+    <View style={styles.flex}>
       <FlatList
         ref={listRef}
         data={messages}
@@ -118,11 +135,11 @@ export function ChatView({
       />
 
       {locked ? (
-        <View style={[styles.locked, { paddingBottom: spacing.md + insets.bottom }]}>
+        <View style={[styles.locked, { paddingBottom: spacing.md + composerBottom }]}>
           <Text style={styles.lockedText}>{lockedReason}</Text>
         </View>
       ) : (
-        <View style={[styles.composer, { paddingBottom: spacing.sm + insets.bottom }]}>
+        <View style={[styles.composer, { paddingBottom: spacing.sm + composerBottom }]}>
           <Pressable
             onPress={onAttach}
             disabled={uploading}
@@ -152,7 +169,7 @@ export function ChatView({
           </Pressable>
         </View>
       )}
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
