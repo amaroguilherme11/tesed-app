@@ -39,3 +39,7 @@ android/
 # Next.js
 .next/
 out/
+
+# Credenciais (FCM, etc.) - NUNCA commitar
+app/credentials/
+*.json.key
