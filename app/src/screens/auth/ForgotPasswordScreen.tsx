@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Alert, StyleSheet, Text } from 'react-native';
+import * as Linking from 'expo-linking';
 import { Screen } from '@/components/Screen';
 import { TextField } from '@/components/TextField';
 import { Button } from '@/components/Button';
@@ -13,7 +14,11 @@ export function ForgotPasswordScreen({ navigation }: any) {
   const onSubmit = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
+      // redirectTo abre a app (deep link) na rota de recuperação de password.
+      const redirectTo = Linking.createURL('reset-password');
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo,
+      });
       if (error) throw error;
       Alert.alert('Email enviado', 'Se a conta existir, vais receber instruções por email.');
       navigation.goBack();

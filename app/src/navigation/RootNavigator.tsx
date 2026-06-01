@@ -8,6 +8,7 @@ import { colors } from '@/theme';
 import { LoginScreen } from '@/screens/auth/LoginScreen';
 import { RegisterScreen } from '@/screens/auth/RegisterScreen';
 import { ForgotPasswordScreen } from '@/screens/auth/ForgotPasswordScreen';
+import { ResetPasswordScreen } from '@/screens/auth/ResetPasswordScreen';
 
 // Navegadores por papel
 import { PatientNavigator } from '@/navigation/PatientNavigator';
@@ -22,7 +23,23 @@ const authScreenOptions = {
 };
 
 export function RootNavigator() {
-  const { session, profile, loading } = useAuth();
+  const { session, profile, loading, recoveringPassword } = useAuth();
+
+  // Recuperação de password tem prioridade sobre tudo: o utilizador chegou por
+  // link de reset e tem de definir nova password antes de seguir.
+  if (recoveringPassword) {
+    return (
+      <NavigationContainer>
+        <Stack.Navigator screenOptions={authScreenOptions}>
+          <Stack.Screen
+            name="ResetPassword"
+            component={ResetPasswordScreen}
+            options={{ title: 'Nova password', headerBackVisible: false }}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    );
+  }
 
   // Ecrã de carregamento enquanto a sessão inicial é verificada, OU enquanto há
   // sessão mas o perfil ainda não chegou. Isto é CRÍTICO: sem este segundo caso,

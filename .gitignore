@@ -27,6 +27,11 @@ abrir-app.html
 # Artefacto gerado do plugin (o .php fonte é que está versionado)
 website/wordpress-plugin/*.zip
 
+# Builds nativos descarregados (.aab/.apk) — ficam no EAS, não no repo
+app/build-output/
+*.aab
+*.apk
+
 # Builds nativos
 ios/
 android/

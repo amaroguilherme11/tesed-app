@@ -8,17 +8,13 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "icon": "./assets/icon.png",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#FFFFFF"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "pt.tesed.app"
     },
     "android": {
       "package": "pt.tesed.app",
+      "softwareKeyboardLayoutMode": "pan",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#009EAB"
@@ -36,10 +32,12 @@
     },
     "plugins": [
       "expo-font",
+      "expo-notifications",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/splash.png",
+          "image": "./assets/splash-symbol.png",
+          "imageWidth": 180,
           "resizeMode": "contain",
           "backgroundColor": "#FFFFFF"
         }

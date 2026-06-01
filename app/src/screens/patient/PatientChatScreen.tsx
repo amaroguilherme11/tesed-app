@@ -1,6 +1,8 @@
-import { useLayoutEffect } from 'react';
+import { useCallback, useLayoutEffect } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { ChatView } from '@/components/ChatView';
 import { HeaderFilesButton } from '@/components/HeaderFilesButton';
+import { markConversationRead } from '@/lib/patientChats';
 
 /**
  * Conversa de um membro específico (ou do próprio titular), aberta a partir da
@@ -8,6 +10,13 @@ import { HeaderFilesButton } from '@/components/HeaderFilesButton';
  */
 export function PatientChatScreen({ route, navigation }: any) {
   const { conversationId, title, lockedReason } = route.params;
+
+  // Marca como lida enquanto o chat está em foco (resposta nova deixa de contar).
+  useFocusEffect(
+    useCallback(() => {
+      if (conversationId) markConversationRead(conversationId);
+    }, [conversationId])
+  );
 
   useLayoutEffect(() => {
     navigation.setOptions({

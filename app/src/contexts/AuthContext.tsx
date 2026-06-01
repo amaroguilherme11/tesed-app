@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import * as Linking from 'expo-linking';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { Profile } from '@/lib/types';
@@ -8,6 +9,10 @@ type AuthState = {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
+  /** True quando o utilizador chegou via link de recuperação de password. */
+  recoveringPassword: boolean;
+  /** Define a nova password (durante a recuperação) e termina o modo recovery. */
+  completePasswordReset: (newPassword: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   /**
@@ -46,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [recoveringPassword, setRecoveringPassword] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -60,16 +66,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    const { data: sub } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+    const { data: sub } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+      // Link de recuperação: o Supabase emite PASSWORD_RECOVERY com uma sessão
+      // temporária. Entramos em modo "definir nova password" (não navegar para a app).
+      if (event === 'PASSWORD_RECOVERY') {
+        setSession(newSession);
+        setRecoveringPassword(true);
+        setLoading(false);
+        return;
+      }
       setSession(newSession);
       setProfile(newSession ? await fetchProfile(newSession.user.id) : null);
       // Regista o dispositivo para push quando há sessão (no-op em Expo Go/web).
       if (newSession) registerForPush();
     });
 
+    // Deep links: quando a app abre por um link (ex.: recuperação de password),
+    // extrai os tokens do URL e cria a sessão. No mobile o supabase-js não o faz
+    // automaticamente (detectSessionInUrl: false), por isso tratamos aqui.
+    const handleUrl = async (url: string | null) => {
+      if (!url) return;
+      const parsed = Linking.parse(url);
+      const params = (parsed.queryParams ?? {}) as Record<string, string>;
+      // Os tokens podem vir no fragmento (#) — Linking.parse trata o que vier na query.
+      const access_token = params.access_token;
+      const refresh_token = params.refresh_token;
+      const type = params.type;
+      if (access_token && refresh_token) {
+        await supabase.auth.setSession({ access_token, refresh_token });
+        if (type === 'recovery') setRecoveringPassword(true);
+      }
+    };
+    Linking.getInitialURL().then(handleUrl);
+    const linkingSub = Linking.addEventListener('url', (e: { url: string }) => handleUrl(e.url));
+
     return () => {
       active = false;
       sub.subscription.unsubscribe();
+      linkingSub.remove();
     };
   }, []);
 
@@ -119,13 +153,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error;
   };
 
+  const completePasswordReset = async (newPassword: string) => {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) throw error;
+    // Password definida: sai do modo recovery e termina a sessão temporária
+    // para o utilizador entrar de novo com a nova password.
+    setRecoveringPassword(false);
+    await supabase.auth.signOut();
+  };
+
   const refreshProfile = async () => {
     if (session) setProfile(await fetchProfile(session.user.id));
   };
 
   return (
     <AuthContext.Provider
-      value={{ session, profile, loading, signIn, signOut, signUpPatient, refreshProfile }}
+      value={{
+        session,
+        profile,
+        loading,
+        recoveringPassword,
+        completePasswordReset,
+        signIn,
+        signOut,
+        signUpPatient,
+        refreshProfile,
+      }}
     >
       {children}
     </AuthContext.Provider>

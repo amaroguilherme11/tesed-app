@@ -11,6 +11,8 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useHeaderHeight } from '@react-navigation/elements';
 import { useChat } from '@/hooks/useChat';
 import { useAuth } from '@/contexts/AuthContext';
 import { MessageBubble } from '@/components/MessageBubble';
@@ -41,6 +43,8 @@ export function ChatView({
   const [uploading, setUploading] = useState(false);
   const listRef = useRef<FlatList>(null);
   const locked = !!lockedReason;
+  const insets = useSafeAreaInsets();
+  const headerHeight = useHeaderHeight();
 
   const onSend = async () => {
     const body = text.trim();
@@ -88,8 +92,11 @@ export function ChatView({
   return (
     <KeyboardAvoidingView
       style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      // 'padding' em ambas as plataformas + o offset do cabeçalho garantem que o
+      // teclado empurra a barra de escrita para cima (em vez de a tapar). No
+      // Android edge-to-edge, o headerHeight inclui a status bar.
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={headerHeight}
     >
       <FlatList
         ref={listRef}
@@ -111,11 +118,11 @@ export function ChatView({
       />
 
       {locked ? (
-        <View style={styles.locked}>
+        <View style={[styles.locked, { paddingBottom: spacing.md + insets.bottom }]}>
           <Text style={styles.lockedText}>{lockedReason}</Text>
         </View>
       ) : (
-        <View style={styles.composer}>
+        <View style={[styles.composer, { paddingBottom: spacing.sm + insets.bottom }]}>
           <Pressable
             onPress={onAttach}
             disabled={uploading}

@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getOrCreateMyConversation } from '@/lib/conversations';
 import { getMySubscription } from '@/lib/subscriptions';
 import { getMyMemberProfiles, removeMemberProfile } from '@/lib/family';
+import { getMyPatientChats, markConversationRead, PatientChat } from '@/lib/patientChats';
 import { confirmAction } from '@/lib/confirm';
 import { formatAge } from '@/lib/age';
 import { ChatView } from '@/components/ChatView';
@@ -38,6 +39,7 @@ export function PatientHomeScreen({ navigation }: any) {
   const [personalConvId, setPersonalConvId] = useState<string | null>(null);
   const [sub, setSub] = useState<MySubscription | null>(null);
   const [members, setMembers] = useState<MemberProfile[]>([]);
+  const [chats, setChats] = useState<PatientChat[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,12 +55,17 @@ export function PatientHomeScreen({ navigation }: any) {
       } else {
         setMembers([]);
       }
+      // Estado de leitura (resposta nova do médico) de todas as conversas.
+      setChats(await getMyPatientChats());
     } catch (e: any) {
       setError(e.message ?? 'Erro a abrir a conversa.');
     } finally {
       setLoading(false);
     }
   }, [session]);
+
+  // Mapa conversationId -> tem resposta nova por ler.
+  const unreadById = new Map(chats.map((c) => [c.conversation_id, c.has_unread]));
 
   useFocusEffect(
     useCallback(() => {
@@ -68,6 +75,15 @@ export function PatientHomeScreen({ navigation }: any) {
 
   const isActive = !!sub && sub.is_active;
   const isFamily = sub?.plan_type === 'family';
+
+  // No plano individual o paciente entra direto no chat — marca como lido ao focar.
+  useFocusEffect(
+    useCallback(() => {
+      if (personalConvId && sub?.plan_type !== 'family') {
+        markConversationRead(personalConvId);
+      }
+    }, [personalConvId, sub?.plan_type])
+  );
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -128,12 +144,14 @@ export function PatientHomeScreen({ navigation }: any) {
     const total = chats.length; // titular + dependentes
     const canAdd = total < FAMILY_MAX;
 
-    const openChat = (c: ChatItem) =>
+    const openChat = (c: ChatItem) => {
+      markConversationRead(c.conversationId); // já viu a resposta
       navigation.navigate('PatientChat', {
         conversationId: c.conversationId,
         title: c.isPersonal ? `${c.label} (eu)` : c.label,
         lockedReason: null,
       });
+    };
 
     const onRemove = (c: ChatItem) => {
       if (!c.memberId) return;
@@ -162,17 +180,20 @@ export function PatientHomeScreen({ navigation }: any) {
           keyExtractor={(c) => c.conversationId}
           renderItem={({ item }) => {
             const age = formatAge(item.dob);
+            const unread = unreadById.get(item.conversationId) === true;
             return (
               <Pressable
                 onPress={() => openChat(item)}
                 style={({ pressed }) => [styles.chatRow, pressed && styles.rowPressed]}
               >
+                {unread && <View style={styles.unreadDot} />}
                 <View style={styles.flex}>
                   <Text style={styles.chatName}>
                     {item.label}
                     {item.isPersonal ? <Text style={styles.tag}>  (eu)</Text> : null}
                     {age ? <Text style={styles.age}>{`  ·  ${age}`}</Text> : null}
                   </Text>
+                  {unread && <Text style={styles.unreadText}>Nova resposta do médico</Text>}
                 </View>
                 {!item.isPersonal && (
                   <Pressable onPress={() => onRemove(item)} hitSlop={8}>
@@ -201,6 +222,7 @@ export function PatientHomeScreen({ navigation }: any) {
   }
 
   // ---- Plano individual (ou sem subscrição): chat pessoal direto ----
+  // Entra direto no chat: a conversa é marcada como lida (efeito acima, no foco).
   return (
     <ChatView conversationId={personalConvId} lockedReason={isActive ? null : LOCK_MESSAGE} />
   );
@@ -225,6 +247,14 @@ const styles = StyleSheet.create({
     ...shadow.card,
   },
   rowPressed: { opacity: 0.85 },
+  unreadDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: colors.unanswered,
+    marginRight: spacing.sm,
+  },
+  unreadText: { fontSize: fontSize.sm, color: colors.unanswered, fontWeight: '600', marginTop: 2 },
   chatName: { fontSize: fontSize.base, fontWeight: '700', color: colors.text },
   tag: { fontWeight: '400', color: colors.primary, fontSize: fontSize.sm },
   age: { fontWeight: '400', color: colors.textMuted, fontSize: fontSize.sm },
