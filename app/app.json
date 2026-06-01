@@ -29,7 +29,10 @@
     },
     "extra": {
       "supabaseUrl": "",
-      "supabaseAnonKey": ""
+      "supabaseAnonKey": "",
+      "eas": {
+        "projectId": "8c51abfc-e5f9-4a67-b7eb-c3fd713d0366"
+      }
     },
     "plugins": [
       "expo-font",
@@ -41,6 +44,7 @@
           "backgroundColor": "#FFFFFF"
         }
       ]
-    ]
+    ],
+    "owner": "maromaro11"
   }
 }

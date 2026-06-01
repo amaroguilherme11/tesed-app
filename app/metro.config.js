@@ -10,11 +10,14 @@ const workspaceRoot = path.resolve(projectRoot, '..');
 
 const config = getDefaultConfig(projectRoot);
 
-// 1. Observar também a raiz do monorepo.
-config.watchFolders = [workspaceRoot];
+// 1. Observar também a raiz do monorepo, SEM descartar os defaults do Expo
+//    (acrescentar, não substituir — evita o aviso do expo doctor).
+config.watchFolders = [...(config.watchFolders ?? []), workspaceRoot];
 
-// 2. Resolver módulos nas duas pastas node_modules.
+// 2. Resolver módulos nas duas pastas node_modules (app + raiz do monorepo),
+//    preservando também quaisquer caminhos que o Expo já tenha definido.
 config.resolver.nodeModulesPaths = [
+  ...(config.resolver.nodeModulesPaths ?? []),
   path.resolve(projectRoot, 'node_modules'),
   path.resolve(workspaceRoot, 'node_modules'),
 ];
