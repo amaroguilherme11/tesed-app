@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   FlatList,
-  Keyboard,
+  KeyboardAvoidingView,
   Platform,
   Pressable,
   StyleSheet,
@@ -43,28 +43,6 @@ export function ChatView({
   const listRef = useRef<FlatList>(null);
   const locked = !!lockedReason;
   const insets = useSafeAreaInsets();
-  // Altura do teclado, gerida manualmente (mais fiável que KeyboardAvoidingView
-  // no Android edge-to-edge do SDK 54). Empurramos o compositor para cima por
-  // este valor quando o teclado está visível.
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-
-  useEffect(() => {
-    const showEvt = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvt = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-    const showSub = Keyboard.addListener(showEvt, (e) => {
-      // No Android, a safe-area inferior já está "dentro" da altura do teclado,
-      // por isso descontamo-la para não duplicar o espaço.
-      const h = e.endCoordinates?.height ?? 0;
-      setKeyboardHeight(Math.max(0, h - (Platform.OS === 'android' ? insets.bottom : 0)));
-      // Mantém a última mensagem visível.
-      setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50);
-    });
-    const hideSub = Keyboard.addListener(hideEvt, () => setKeyboardHeight(0));
-    return () => {
-      showSub.remove();
-      hideSub.remove();
-    };
-  }, [insets.bottom]);
 
   const onSend = async () => {
     const body = text.trim();
@@ -109,12 +87,14 @@ export function ChatView({
     );
   }
 
-  // Espaço inferior do compositor: safe-area quando o teclado está fechado;
-  // quando aberto, a altura do teclado (empurra a barra para cima dele).
-  const composerBottom = keyboardHeight > 0 ? keyboardHeight : insets.bottom;
-
+  // No Android, o nativo (softwareKeyboardLayoutMode: "pan") desliza a janela
+  // para mostrar o campo — não é preciso código JS. No iOS, o KeyboardAvoidingView
+  // trata disso. O padding inferior é só a safe-area (barra de navegação).
   return (
-    <View style={styles.flex}>
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <FlatList
         ref={listRef}
         data={messages}
@@ -135,11 +115,11 @@ export function ChatView({
       />
 
       {locked ? (
-        <View style={[styles.locked, { paddingBottom: spacing.md + composerBottom }]}>
+        <View style={[styles.locked, { paddingBottom: spacing.md + insets.bottom }]}>
           <Text style={styles.lockedText}>{lockedReason}</Text>
         </View>
       ) : (
-        <View style={[styles.composer, { paddingBottom: spacing.sm + composerBottom }]}>
+        <View style={[styles.composer, { paddingBottom: spacing.sm + insets.bottom }]}>
           <Pressable
             onPress={onAttach}
             disabled={uploading}
@@ -169,7 +149,7 @@ export function ChatView({
           </Pressable>
         </View>
       )}
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

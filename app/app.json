@@ -14,7 +14,7 @@
     },
     "android": {
       "package": "pt.tesed.app",
-      "softwareKeyboardLayoutMode": "resize",
+      "softwareKeyboardLayoutMode": "pan",
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -33,7 +33,13 @@
     },
     "plugins": [
       "expo-font",
-      "expo-notifications",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#009EAB"
+        }
+      ],
       [
         "expo-splash-screen",
         {
