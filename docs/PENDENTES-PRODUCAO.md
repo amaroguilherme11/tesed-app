@@ -6,7 +6,9 @@ foram simplificados/desligados durante o desenvolvimento e têm de ser repostos.
 ## 🔒 Segurança / Auth
 - [ ] **Reativar confirmação de email no registo.** Foi desligada para testes.
       Painel: **Authentication → Providers → Email → "Confirm email" = ON**.
-      (Com isto, o registo passa a exigir confirmação por email antes de entrar.)
+      Ver `docs/CONFIG-EMAILS-SUPABASE.md` (templates + redirect URLs já preparados).
+- [ ] **Configurar SMTP próprio** (Authentication → SMTP Settings). O email
+      gratuito do Supabase só envia ~3-4/hora — insuficiente para produção.
 - [ ] **Configurar URLs de redirect.** Painel: **Authentication → URL Configuration**:
       - Site URL: `tesed://` (e, quando existir, o URL do website).
       - Redirect URLs: `tesed://*`.
