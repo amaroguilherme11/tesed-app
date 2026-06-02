@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
         .single();
       if (mp?.full_name) aboutWhom = ` (sobre ${mp.full_name})`;
     }
-    title = 'Nova resposta do médico';
+    title = 'Nova resposta do terapeuta';
     body = `${preview}${aboutWhom}`;
   } else {
     // Para o médico. Identifica o paciente e, se aplicável, o membro.

@@ -95,7 +95,7 @@ export function RegisterScreen({ navigation }: any) {
           </View>
           <Text style={styles.consentText}>
             Li e aceito a Política de Privacidade e o tratamento dos meus dados de saúde
-            para efeitos de comunicação com o médico.
+            para efeitos de comunicação com o terapeuta.
           </Text>
         </Pressable>
 

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
 import * as Linking from 'expo-linking';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
@@ -52,6 +52,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [recoveringPassword, setRecoveringPassword] = useState(false);
+  // Ref para o onAuthStateChange saber se estamos em recovery sem depender do
+  // estado assíncrono (evita carregar profile/navegar durante o reset).
+  const recoveringRef = useRef(false);
+  const setRecovering = (v: boolean) => {
+    recoveringRef.current = v;
+    setRecoveringPassword(v);
+  };
 
   useEffect(() => {
     let active = true;
@@ -71,7 +78,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // temporária. Entramos em modo "definir nova password" (não navegar para a app).
       if (event === 'PASSWORD_RECOVERY') {
         setSession(newSession);
-        setRecoveringPassword(true);
+        setRecovering(true);
+        setLoading(false);
+        return;
+      }
+      // Durante o recovery, ignoramos o SIGNED_IN da sessão temporária (não
+      // carregamos profile nem navegamos para a app — o ecrã é o de nova password).
+      if (recoveringRef.current) {
+        setSession(newSession);
         setLoading(false);
         return;
       }
@@ -104,6 +118,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         const isRecovery = all.type === 'recovery';
+        // Entrar JÁ em modo recovery (antes do await) garante que o ecrã de nova
+        // password aparece e que o RootNavigator não fica preso no spinner
+        // (session sem profile). loading=false é essencial.
+        if (isRecovery) {
+          setRecovering(true);
+          setLoading(false);
+        }
 
         // Caso A: tokens diretos no URL.
         if (all.access_token && all.refresh_token) {
@@ -111,16 +132,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             access_token: all.access_token,
             refresh_token: all.refresh_token,
           });
-          if (isRecovery) setRecoveringPassword(true);
+          setLoading(false);
           return;
         }
         // Caso B: fluxo PKCE com `code` — troca por sessão.
         if (all.code) {
           await supabase.auth.exchangeCodeForSession(all.code);
-          if (isRecovery) setRecoveringPassword(true);
+          setLoading(false);
         }
       } catch (e: any) {
         console.warn('[Tesed] Falha a processar deep link:', e?.message ?? e);
+        setLoading(false);
       }
     };
     Linking.getInitialURL().then(handleUrl);
@@ -184,7 +206,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error;
     // Password definida: sai do modo recovery e termina a sessão temporária
     // para o utilizador entrar de novo com a nova password.
-    setRecoveringPassword(false);
+    setRecovering(false);
     await supabase.auth.signOut();
   };
 

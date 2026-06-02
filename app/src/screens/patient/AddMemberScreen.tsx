@@ -41,7 +41,7 @@ export function AddMemberScreen({ navigation }: any) {
       <Text style={styles.title}>Adicionar membro da família</Text>
       <Text style={styles.muted}>
         Cria um perfil para um familiar (ex.: um filho). Cada membro tem o seu próprio
-        chat com o médico, para separar os casos.
+        chat com o terapeuta, para separar os casos.
       </Text>
       <TextField label="Nome completo" value={fullName} onChangeText={setFullName} />
       <DateField label="Data de nascimento" value={dob} onChangeText={setDob} />

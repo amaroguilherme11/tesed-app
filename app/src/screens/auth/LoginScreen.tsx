@@ -29,7 +29,7 @@ export function LoginScreen({ navigation }: any) {
   return (
     <Screen>
       <Image source={logo} style={styles.logo} resizeMode="contain" />
-      <Text style={styles.subtitle}>Comunicação com o seu médico, sem se perder nada.</Text>
+      <Text style={styles.subtitle}>Comunicação com o seu terapeuta, sem se perder nada.</Text>
 
       <View style={styles.form}>
         <TextField

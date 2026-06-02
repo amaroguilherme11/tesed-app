@@ -174,7 +174,7 @@ export function PatientHomeScreen({ navigation }: any) {
     return (
       <View style={styles.container}>
         <Text style={styles.familyTitle}>Família ({total}/{FAMILY_MAX})</Text>
-        <Text style={styles.familyHint}>Escolhe de quem é o caso para falar com o médico.</Text>
+        <Text style={styles.familyHint}>Escolhe de quem é o caso para falar com o terapeuta.</Text>
         <FlatList
           data={chats}
           keyExtractor={(c) => c.conversationId}
@@ -193,7 +193,7 @@ export function PatientHomeScreen({ navigation }: any) {
                     {item.isPersonal ? <Text style={styles.tag}>  (eu)</Text> : null}
                     {age ? <Text style={styles.age}>{`  ·  ${age}`}</Text> : null}
                   </Text>
-                  {unread && <Text style={styles.unreadText}>Nova resposta do médico</Text>}
+                  {unread && <Text style={styles.unreadText}>Nova resposta do terapeuta</Text>}
                 </View>
                 {!item.isPersonal && (
                   <Pressable onPress={() => onRemove(item)} hitSlop={8}>
