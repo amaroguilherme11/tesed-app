@@ -57,6 +57,18 @@ website (fora da app) e ativadas na app através de um código.
 
 ## Estado atual
 
+> 🟢 **RESUMO (ler primeiro):** App **Android funcional e testada em teste interno**
+> (Play Console), build **vc7**. Todas as fases 1–8 feitas. Identidade Tesed aplicada,
+> notificações push (FCM) a funcionar, reset de password + confirmação de email
+> (deep links), SMTP @tesed.pt, dashboard de pacientes, multi-ficheiro, indicador de
+> não-lidas. Textos usam **"terapeuta"** (não "médico"). Migrações 0001–0018 aplicadas.
+> Edge Functions deployed. Backup Git privado em github.com/amaroguilherme11/tesed-app.
+>
+> **PRÓXIMO:** (a) publicar Android a sério (ficha da loja, política privacidade,
+> questionários) e (b) **desenvolver versão iOS**. Ver **`docs/PROXIMOS-PASSOS.md`**.
+> Ferramentas instaladas: Node, Git, Supabase CLI, EAS CLI, gh (PATH:
+> `C:\Users\Amaro\AppData\Roaming\npm` + `C:\Users\Amaro\scoop\shims`).
+
 **Fase 1 — Fundação: concluída.** Monorepo, modelo de dados, RLS, trigger de
 estado "não respondida", seeding do médico único (por convite, sem definir password),
 design tokens e auth com dois papéis (paciente/médico).
