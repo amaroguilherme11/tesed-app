@@ -1,12 +1,21 @@
-import { useLayoutEffect } from 'react';
+import { useCallback, useLayoutEffect } from 'react';
 import { Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { ChatView } from '@/components/ChatView';
 import { HeaderFilesButton } from '@/components/HeaderFilesButton';
+import { markConversationReadDoctor } from '@/lib/doctorInbox';
 import { colors, fontSize, spacing } from '@/theme';
 
 /** Conversa do médico com um paciente específico (a partir da caixa de entrada). */
 export function DoctorConversationScreen({ route, navigation }: any) {
   const { conversationId, patientName, patientPhone } = route.params;
+
+  // Marca como lida pelo médico enquanto o chat está em foco.
+  useFocusEffect(
+    useCallback(() => {
+      if (conversationId) markConversationReadDoctor(conversationId);
+    }, [conversationId])
+  );
 
   useLayoutEffect(() => {
     navigation.setOptions({

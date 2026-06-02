@@ -39,6 +39,7 @@ export function useConversations() {
           isFamily: r.is_family,
           chats: [],
           unansweredCount: 0,
+          unreadCount: 0,
           lastMessageAt: null,
         };
         byOwner.set(r.patient_id, g);
@@ -51,8 +52,10 @@ export function useConversations() {
         isPersonal,
         status: r.status,
         last_message_at: r.last_message_at,
+        hasUnread: r.has_unread === true,
       });
       if (r.status === 'unanswered') g.unansweredCount += 1;
+      if (r.has_unread === true) g.unreadCount += 1;
       if ((r.last_message_at ?? '') > (g.lastMessageAt ?? '')) {
         g.lastMessageAt = r.last_message_at;
       }

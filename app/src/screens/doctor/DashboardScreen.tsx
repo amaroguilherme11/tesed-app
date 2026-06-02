@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
+  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -16,7 +17,7 @@ import { colors, fontSize, radius, shadow, spacing } from '@/theme';
  * Painel do médico/admin (Fase 6): métricas-chave do sistema.
  * Reavalia ao ganhar foco e suporta "puxar para atualizar".
  */
-export function DashboardScreen() {
+export function DashboardScreen({ navigation }: any) {
   const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -75,6 +76,14 @@ export function DashboardScreen() {
         </Text>
       </View>
 
+      {/* Atalho para a lista detalhada de pacientes */}
+      <Pressable
+        onPress={() => navigation.navigate('Patients')}
+        style={({ pressed }) => [styles.patientsBtn, pressed && { opacity: 0.85 }]}
+      >
+        <Text style={styles.patientsBtnText}>👥 Ver pacientes ({metrics.patients_total})</Text>
+      </Pressable>
+
       <Section title="Conversas">
         <Stat label="Total" value={metrics.conversations_total} />
         <Stat label="Respondidas" value={metrics.conversations_answered} />
@@ -125,6 +134,17 @@ const styles = StyleSheet.create({
   content: { padding: spacing.md },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
   muted: { color: colors.textMuted, fontSize: fontSize.base },
+  patientsBtn: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.base,
+    borderWidth: 1.5,
+    borderColor: colors.primary,
+    padding: spacing.md,
+    alignItems: 'center',
+    marginBottom: spacing.md,
+    ...shadow.card,
+  },
+  patientsBtnText: { color: colors.primary, fontWeight: '700', fontSize: fontSize.base },
   hero: {
     backgroundColor: colors.primary,
     borderRadius: radius.base,

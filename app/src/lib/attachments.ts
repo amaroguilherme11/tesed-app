@@ -31,6 +31,21 @@ export async function pickFile(): Promise<PickedFile | null> {
   };
 }
 
+/** Seletor de VÁRIOS ficheiros. Devolve [] se cancelar. */
+export async function pickFiles(): Promise<PickedFile[]> {
+  const result = await DocumentPicker.getDocumentAsync({
+    copyToCacheDirectory: true,
+    multiple: true,
+  });
+  if (result.canceled || !result.assets?.length) return [];
+  return result.assets.map((a) => ({
+    uri: a.uri,
+    name: a.name ?? 'ficheiro',
+    mimeType: a.mimeType ?? null,
+    size: a.size ?? null,
+  }));
+}
+
 /**
  * Lê o ficheiro escolhido e devolve os bytes prontos para upload.
  * Cross-platform: na web usa fetch->blob; no telemóvel lê base64 e converte.

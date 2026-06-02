@@ -122,6 +122,7 @@ export type InboxRow = {
   member_name: string | null;
   member_dob: string | null;
   is_family: boolean;
+  has_unread: boolean;
 };
 
 /** Um chat dentro de um grupo (titular ou dependente). */
@@ -132,6 +133,7 @@ export type InboxChat = {
   isPersonal: boolean;  // true = conversa do próprio titular
   status: ConversationStatus;
   last_message_at: string | null;
+  hasUnread: boolean;
 };
 
 /** Grupo da caixa de entrada: um titular e os seus chats. */
@@ -143,5 +145,20 @@ export type InboxGroup = {
   isFamily: boolean;
   chats: InboxChat[];
   unansweredCount: number;
+  unreadCount: number;
   lastMessageAt: string | null;
+};
+
+/** Linha do dashboard de pacientes (de patients_overview()). */
+export type PatientOverview = {
+  patient_id: string;
+  full_name: string | null;
+  email: string;
+  phone: string | null;
+  date_of_birth: string | null;
+  created_at: string;
+  plan_type: PlanType | null;
+  sub_starts_at: string | null;
+  sub_expires_at: string | null;
+  sub_active: boolean;
 };

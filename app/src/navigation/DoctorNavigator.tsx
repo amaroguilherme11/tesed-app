@@ -6,6 +6,7 @@ import { DoctorFamilyChatsScreen } from '@/screens/doctor/DoctorFamilyChatsScree
 import { ConversationFilesScreen } from '@/screens/shared/ConversationFilesScreen';
 import { CodesScreen } from '@/screens/doctor/CodesScreen';
 import { DashboardScreen } from '@/screens/doctor/DashboardScreen';
+import { PatientsScreen } from '@/screens/doctor/PatientsScreen';
 import { HeaderSignOutButton } from '@/components/HeaderSignOutButton';
 import { HeaderTextButton } from '@/components/HeaderTextButton';
 import { HeaderLogoTitle } from '@/components/HeaderLogoTitle';
@@ -60,6 +61,11 @@ export function DoctorNavigator() {
         name="Dashboard"
         component={DashboardScreen}
         options={{ title: 'Painel' }}
+      />
+      <Stack.Screen
+        name="Patients"
+        component={PatientsScreen}
+        options={{ title: 'Pacientes' }}
       />
     </Stack.Navigator>
   );

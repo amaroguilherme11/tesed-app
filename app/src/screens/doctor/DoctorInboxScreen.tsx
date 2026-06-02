@@ -18,13 +18,17 @@ function GroupRow({ group, onOpen }: { group: InboxGroup; onOpen: () => void }) 
     return (
       <Pressable onPress={onOpen} style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}>
         <View style={styles.rowMain}>
-          <Text style={styles.name} numberOfLines={1}>
-            👪 Família: {group.ownerName}
-          </Text>
+          <View style={styles.nameRow}>
+            {group.unreadCount > 0 && <View style={styles.unreadDot} />}
+            <Text style={styles.name} numberOfLines={1}>
+              👪 Família: {group.ownerName}
+            </Text>
+          </View>
           <Text style={styles.time}>{relativeTime(group.lastMessageAt)}</Text>
         </View>
         <Text style={styles.sub}>
           {group.chats.length} {group.chats.length === 1 ? 'chat' : 'chats'}
+          {group.unreadCount > 0 ? ` · ${group.unreadCount} por ler` : ''}
         </Text>
         {group.unansweredCount > 0 ? (
           <View style={styles.badge}>
@@ -43,13 +47,17 @@ function GroupRow({ group, onOpen }: { group: InboxGroup; onOpen: () => void }) 
   const chat = group.chats[0];
   const age = formatAge(group.ownerDob);
   const unanswered = chat?.status === 'unanswered';
+  const unread = group.unreadCount > 0;
   return (
     <Pressable onPress={onOpen} style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}>
       <View style={styles.rowMain}>
-        <Text style={styles.name} numberOfLines={1}>
-          {group.ownerName}
-          {age ? <Text style={styles.age}>{`  ·  ${age}`}</Text> : null}
-        </Text>
+        <View style={styles.nameRow}>
+          {unread && <View style={styles.unreadDot} />}
+          <Text style={[styles.name, unread && styles.nameUnread]} numberOfLines={1}>
+            {group.ownerName}
+            {age ? <Text style={styles.age}>{`  ·  ${age}`}</Text> : null}
+          </Text>
+        </View>
         <Text style={styles.time}>{relativeTime(group.lastMessageAt)}</Text>
       </View>
       {unanswered ? (
@@ -127,7 +135,10 @@ const styles = StyleSheet.create({
   },
   rowPressed: { opacity: 0.85 },
   rowMain: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  name: { fontSize: fontSize.base, fontWeight: '700', color: colors.text, flex: 1, marginRight: spacing.sm },
+  nameRow: { flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: spacing.sm },
+  unreadDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: colors.primary, marginRight: spacing.sm },
+  name: { fontSize: fontSize.base, fontWeight: '700', color: colors.text, flex: 1 },
+  nameUnread: { color: colors.primaryDark },
   age: { fontWeight: '400', color: colors.textMuted, fontSize: fontSize.sm },
   sub: { fontSize: fontSize.sm, color: colors.textMuted, marginTop: 2 },
   time: { fontSize: fontSize.sm, color: colors.textMuted },

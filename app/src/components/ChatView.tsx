@@ -15,7 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useChat } from '@/hooks/useChat';
 import { useAuth } from '@/contexts/AuthContext';
 import { MessageBubble } from '@/components/MessageBubble';
-import { pickFile, sendAttachment } from '@/lib/attachments';
+import { pickFiles, sendAttachment } from '@/lib/attachments';
 import { colors, fontSize, radius, spacing } from '@/theme';
 
 /**
@@ -60,20 +60,24 @@ export function ChatView({
 
   const onAttach = async () => {
     try {
-      const file = await pickFile();
-      if (!file) return; // utilizador cancelou
+      const files = await pickFiles();
+      if (files.length === 0) return; // utilizador cancelou
       setUploading(true);
-      const message = await sendAttachment({
-        conversationId,
-        senderId: uid,
-        file,
-        // Se houver texto escrito, vai como legenda do anexo.
-        caption: text.trim() || undefined,
-      });
+      const caption = text.trim() || undefined;
       setText('');
-      appendMessage(message); // eco otimista (o Realtime faz dedupe por id)
+      // Envia cada ficheiro como a sua própria mensagem (em sequência). A legenda
+      // (se houver) acompanha o primeiro; os restantes vão só com o nome.
+      for (let i = 0; i < files.length; i++) {
+        const message = await sendAttachment({
+          conversationId,
+          senderId: uid,
+          file: files[i],
+          caption: i === 0 ? caption : undefined,
+        });
+        appendMessage(message); // eco otimista (o Realtime faz dedupe por id)
+      }
     } catch (e: any) {
-      Alert.alert('Não foi possível enviar o ficheiro', e.message ?? 'Erro desconhecido.');
+      Alert.alert('Não foi possível enviar', e.message ?? 'Erro desconhecido.');
     } finally {
       setUploading(false);
     }
