@@ -84,17 +84,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Deep links: quando a app abre por um link (ex.: recuperação de password),
     // extrai os tokens do URL e cria a sessão. No mobile o supabase-js não o faz
     // automaticamente (detectSessionInUrl: false), por isso tratamos aqui.
+    // Os parâmetros do Supabase podem vir na QUERY (?a=b) OU no FRAGMENTO (#a=b),
+    // por isso juntamos os dois. Pode ainda vir um `code` (fluxo PKCE).
     const handleUrl = async (url: string | null) => {
       if (!url) return;
-      const parsed = Linking.parse(url);
-      const params = (parsed.queryParams ?? {}) as Record<string, string>;
-      // Os tokens podem vir no fragmento (#) — Linking.parse trata o que vier na query.
-      const access_token = params.access_token;
-      const refresh_token = params.refresh_token;
-      const type = params.type;
-      if (access_token && refresh_token) {
-        await supabase.auth.setSession({ access_token, refresh_token });
-        if (type === 'recovery') setRecoveringPassword(true);
+      try {
+        const all: Record<string, string> = {};
+        // Query (?...) via Linking.parse
+        const parsed = Linking.parse(url);
+        Object.assign(all, (parsed.queryParams ?? {}) as Record<string, string>);
+        // Fragmento (#...) — parse manual
+        const hashIndex = url.indexOf('#');
+        if (hashIndex !== -1) {
+          const frag = url.slice(hashIndex + 1);
+          for (const pair of frag.split('&')) {
+            const [k, v] = pair.split('=');
+            if (k) all[decodeURIComponent(k)] = decodeURIComponent(v ?? '');
+          }
+        }
+
+        const isRecovery = all.type === 'recovery';
+
+        // Caso A: tokens diretos no URL.
+        if (all.access_token && all.refresh_token) {
+          await supabase.auth.setSession({
+            access_token: all.access_token,
+            refresh_token: all.refresh_token,
+          });
+          if (isRecovery) setRecoveringPassword(true);
+          return;
+        }
+        // Caso B: fluxo PKCE com `code` — troca por sessão.
+        if (all.code) {
+          await supabase.auth.exchangeCodeForSession(all.code);
+          if (isRecovery) setRecoveringPassword(true);
+        }
+      } catch (e: any) {
+        console.warn('[Tesed] Falha a processar deep link:', e?.message ?? e);
       }
     };
     Linking.getInitialURL().then(handleUrl);
