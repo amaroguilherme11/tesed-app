@@ -10,7 +10,17 @@
     "icon": "./assets/icon.png",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "pt.tesed.app"
+      "bundleIdentifier": "pt.tesed.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLName": "pt.tesed.app",
+            "CFBundleURLSchemes": ["tesed"]
+          }
+        ]
+      }
     },
     "android": {
       "package": "pt.tesed.app",

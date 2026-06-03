@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radius, spacing, fontSize, fonts } from '@/theme';
 
 /**
@@ -60,8 +61,9 @@ export function PhoneField({
       </View>
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
-        <Pressable style={styles.backdrop} onPress={() => setOpen(false)}>
-          <View style={styles.sheet}>
+        <SafeAreaView style={styles.backdrop} edges={['top', 'bottom', 'left', 'right']}>
+          <Pressable style={styles.backdropPress} onPress={() => setOpen(false)}>
+            <View style={styles.sheet}>
             <Text style={styles.sheetTitle}>Indicativo do país</Text>
             <ScrollView>
               {COUNTRIES.map((c) => (
@@ -80,8 +82,9 @@ export function PhoneField({
                 </Pressable>
               ))}
             </ScrollView>
-          </View>
-        </Pressable>
+            </View>
+          </Pressable>
+        </SafeAreaView>
       </Modal>
     </View>
   );
@@ -121,7 +124,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     fontFamily: fonts.bodyRegular,
   },
-  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', padding: spacing.lg },
+  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' },
+  backdropPress: { flex: 1, justifyContent: 'center', padding: spacing.lg },
   sheet: { backgroundColor: colors.surface, borderRadius: radius.base, maxHeight: '70%', padding: spacing.md },
   sheetTitle: { fontSize: fontSize.lg, fontFamily: fonts.display, color: colors.text, marginBottom: spacing.sm },
   option: {

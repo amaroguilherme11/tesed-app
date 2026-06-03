@@ -31,18 +31,18 @@ e depois promover a produção. Inclui checklist e textos prontos.
 
 ### Descrição curta (máx. 80 caracteres)
 ```
-Fale com o seu médico de forma simples e segura, sem nada se perder.
+Fale com o seu terapeuta de forma simples e segura, sem nada se perder.
 ```
 
 ### Descrição completa (máx. 4000 caracteres) — rascunho
 ```
-A Tesed liga-o ao seu médico através de uma comunicação simples, organizada e
+A Tesed liga-o ao seu terapeuta através de uma comunicação simples, organizada e
 segura. Em vez de mensagens dispersas por vários canais, tem um único espaço onde
 cada conversa tem um estado claro — para que nenhuma questão fique sem resposta.
 
 PRINCIPAIS FUNCIONALIDADES
-• Conversa direta com o seu médico, a qualquer hora, de forma assíncrona.
-• Estado claro de cada conversa: o médico vê facilmente o que está por responder.
+• Conversa direta com o seu terapeuta, a qualquer hora, de forma assíncrona.
+• Estado claro de cada conversa: o terapeuta vê facilmente o que está por responder.
 • Envio de ficheiros nos dois sentidos — partilhe exames e receba resultados e
   relatórios em segurança.
 • Plano família: faça a gestão de perfis dos seus dependentes (ex.: filhos), cada
@@ -65,7 +65,7 @@ os serviços de emergência (112).
 
 ### Notas / informação de lançamento (release notes) — 1.ª versão
 ```
-Primeira versão da Tesed: conversa com o seu médico, envio de ficheiros, gestão
+Primeira versão da Tesed: conversa com o seu terapeuta, envio de ficheiros, gestão
 de família e notificações.
 ```
 
