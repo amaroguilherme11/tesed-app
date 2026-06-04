@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -16,7 +17,7 @@ import { useHeaderHeight } from '@react-navigation/elements';
 import { useChat } from '@/hooks/useChat';
 import { useAuth } from '@/contexts/AuthContext';
 import { MessageBubble } from '@/components/MessageBubble';
-import { pickFiles, sendAttachment } from '@/lib/attachments';
+import { pickFiles, pickImages, takePhoto, sendAttachment, PickedFile } from '@/lib/attachments';
 import { colors, fontSize, radius, spacing } from '@/theme';
 
 /**
@@ -45,6 +46,7 @@ export function ChatView({
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const listRef = useRef<FlatList>(null);
   const locked = !!lockedReason;
   const insets = useSafeAreaInsets();
@@ -64,15 +66,15 @@ export function ChatView({
     }
   };
 
-  const onAttach = async () => {
+  // Envia uma lista de ficheiros/fotos: cada um vira a sua própria mensagem (em
+  // sequência). A legenda escrita (se houver) acompanha o primeiro; os restantes
+  // vão só com o nome. O trigger de BD trata do estado "respondida/não respondida".
+  const sendFiles = async (files: PickedFile[]) => {
+    if (files.length === 0) return; // utilizador cancelou
+    setUploading(true);
+    const caption = text.trim() || undefined;
+    setText('');
     try {
-      const files = await pickFiles();
-      if (files.length === 0) return; // utilizador cancelou
-      setUploading(true);
-      const caption = text.trim() || undefined;
-      setText('');
-      // Envia cada ficheiro como a sua própria mensagem (em sequência). A legenda
-      // (se houver) acompanha o primeiro; os restantes vão só com o nome.
       for (let i = 0; i < files.length; i++) {
         const message = await sendAttachment({
           conversationId,
@@ -84,9 +86,31 @@ export function ChatView({
       }
     } catch (e: any) {
       Alert.alert('Não foi possível enviar', e.message ?? 'Erro desconhecido.');
+      if (caption) setText(caption); // repõe a legenda se falhar
     } finally {
       setUploading(false);
     }
+  };
+
+  // Abre um seletor (câmara / galeria / ficheiros) e envia o que devolver.
+  // O menu fecha primeiro; como é um overlay (não um Modal nativo), não há
+  // conflito com o seletor nativo que abre a seguir.
+  const runPicker = async (picker: () => Promise<PickedFile[]>) => {
+    setMenuOpen(false);
+    let files: PickedFile[] = [];
+    try {
+      files = await picker();
+    } catch (e: any) {
+      // Tipicamente permissão recusada — mostra a mensagem amigável do attachments.ts.
+      Alert.alert('Sem acesso', e.message ?? 'Não foi possível abrir.');
+      return;
+    }
+    await sendFiles(files);
+  };
+
+  const openMenu = () => {
+    Keyboard.dismiss();
+    setMenuOpen(true);
   };
 
   if (loading) {
@@ -134,10 +158,10 @@ export function ChatView({
       ) : (
         <View style={[styles.composer, { paddingBottom: spacing.sm + insets.bottom }]}>
           <Pressable
-            onPress={onAttach}
+            onPress={openMenu}
             disabled={uploading}
             style={[styles.attachBtn, uploading && styles.sendBtnOff]}
-            accessibilityLabel="Anexar ficheiro"
+            accessibilityLabel="Anexar foto ou ficheiro"
           >
             {uploading ? (
               <ActivityIndicator size="small" color={colors.primary} />
@@ -160,6 +184,29 @@ export function ChatView({
           >
             <Text style={styles.sendText}>Enviar</Text>
           </Pressable>
+        </View>
+      )}
+
+      {/* Menu de anexos (overlay, não Modal nativo, para não colidir com o seletor). */}
+      {menuOpen && (
+        <View style={StyleSheet.absoluteFill}>
+          <Pressable style={styles.backdrop} onPress={() => setMenuOpen(false)} />
+          <View style={[styles.sheet, { paddingBottom: spacing.md + insets.bottom }]}>
+            <Pressable style={styles.menuItem} onPress={() => runPicker(takePhoto)}>
+              <Text style={styles.menuIcon}>📷</Text>
+              <Text style={styles.menuLabel}>Tirar foto</Text>
+            </Pressable>
+            <View style={styles.menuDivider} />
+            <Pressable style={styles.menuItem} onPress={() => runPicker(pickImages)}>
+              <Text style={styles.menuIcon}>🖼️</Text>
+              <Text style={styles.menuLabel}>Escolher fotos</Text>
+            </Pressable>
+            <View style={styles.menuDivider} />
+            <Pressable style={styles.menuItem} onPress={() => runPicker(pickFiles)}>
+              <Text style={styles.menuIcon}>📎</Text>
+              <Text style={styles.menuLabel}>Enviar ficheiro</Text>
+            </Pressable>
+          </View>
         </View>
       )}
     </KeyboardAvoidingView>
@@ -226,4 +273,25 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 20,
   },
+  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.35)' },
+  sheet: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: radius.base,
+    borderTopRightRadius: radius.base,
+    paddingTop: spacing.sm,
+    paddingHorizontal: spacing.md,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingVertical: spacing.md,
+  },
+  menuIcon: { fontSize: fontSize.xl },
+  menuLabel: { fontSize: fontSize.base, color: colors.text, fontWeight: '600' },
+  menuDivider: { height: 1, backgroundColor: colors.border },
 });

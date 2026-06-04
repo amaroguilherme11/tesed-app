@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Attachment } from '@/lib/types';
-import { openAttachment } from '@/lib/attachments';
+import { getAttachmentUrl, openAttachment } from '@/lib/attachments';
 import { colors, fontSize, radius, spacing } from '@/theme';
 
 type Props = {
@@ -25,7 +25,13 @@ function formatSize(bytes: number | null): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-/** Linha clicável de um anexo: abre um URL assinado temporário ao tocar. */
+/** Decide se um anexo é uma imagem (pelo mime ou pela extensão do nome). */
+function isImage(a: Attachment): boolean {
+  if (a.mime_type?.startsWith('image/')) return true;
+  return /\.(jpe?g|png|gif|webp|heic|heif|bmp)$/i.test(a.file_name);
+}
+
+/** Linha clicável de um anexo (ficheiro não-imagem): abre URL assinado ao tocar. */
 function AttachmentRow({ attachment, mine }: { attachment: Attachment; mine: boolean }) {
   const [loading, setLoading] = useState(false);
 
@@ -53,6 +59,42 @@ function AttachmentRow({ attachment, mine }: { attachment: Attachment; mine: boo
   );
 }
 
+/**
+ * Miniatura de uma imagem anexada. Gera o URL assinado (temporário) ao montar e
+ * mostra a foto; tocar abre em tamanho real. Se o URL falhar, cai na linha de
+ * ficheiro normal para não deixar o anexo inacessível.
+ */
+function ImageAttachment({ attachment, mine }: { attachment: Attachment; mine: boolean }) {
+  const [url, setUrl] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    getAttachmentUrl(attachment.file_path).then((u) => {
+      if (!active) return;
+      if (u) setUrl(u);
+      else setFailed(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, [attachment.file_path]);
+
+  if (failed) return <AttachmentRow attachment={attachment} mine={mine} />;
+
+  return (
+    <Pressable onPress={() => openAttachment(attachment.file_path)} style={styles.imageWrap}>
+      {url ? (
+        <Image source={{ uri: url }} style={styles.image} resizeMode="cover" />
+      ) : (
+        <View style={[styles.image, styles.imageLoading]}>
+          <ActivityIndicator color={mine ? colors.white : colors.primary} />
+        </View>
+      )}
+    </Pressable>
+  );
+}
+
 export function MessageBubble({ body, createdAt, mine, attachments }: Props) {
   const hasAttachments = !!attachments && attachments.length > 0;
   // Se o corpo for igual ao nome do anexo (anexo sem legenda), não repetir o texto.
@@ -64,7 +106,13 @@ export function MessageBubble({ body, createdAt, mine, attachments }: Props) {
       <View style={[styles.bubble, mine ? styles.mine : styles.other]}>
         {showBody && <Text style={[styles.body, mine && styles.bodyMine]}>{body}</Text>}
         {hasAttachments &&
-          attachments!.map((a) => <AttachmentRow key={a.id} attachment={a} mine={mine} />)}
+          attachments!.map((a) =>
+            isImage(a) ? (
+              <ImageAttachment key={a.id} attachment={a} mine={mine} />
+            ) : (
+              <AttachmentRow key={a.id} attachment={a} mine={mine} />
+            )
+          )}
         <Text style={[styles.time, mine && styles.timeMine]}>{formatTime(createdAt)}</Text>
       </View>
     </View>
@@ -102,4 +150,7 @@ const styles = StyleSheet.create({
   attachInfo: { flex: 1 },
   attachName: { fontSize: fontSize.sm, fontWeight: '600', color: colors.text },
   attachMeta: { fontSize: 11, color: colors.textMuted, marginTop: 1 },
+  imageWrap: { marginTop: spacing.xs },
+  image: { width: 200, height: 200, borderRadius: radius.sm, backgroundColor: colors.bg },
+  imageLoading: { alignItems: 'center', justifyContent: 'center' },
 });

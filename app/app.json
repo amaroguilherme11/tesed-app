@@ -44,6 +44,13 @@
     "plugins": [
       "expo-font",
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "A Tesed precisa de aceder às tuas fotos para as poderes enviar ao teu terapeuta.",
+          "cameraPermission": "A Tesed precisa de aceder à câmara para poderes tirar e enviar fotos ao teu terapeuta."
+        }
+      ],
+      [
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",

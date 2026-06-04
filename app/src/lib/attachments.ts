@@ -1,5 +1,6 @@
 import { Linking, Platform } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
+import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { decode } from 'base64-arraybuffer';
 import { supabase } from '@/lib/supabase';
@@ -44,6 +45,60 @@ export async function pickFiles(): Promise<PickedFile[]> {
     mimeType: a.mimeType ?? null,
     size: a.size ?? null,
   }));
+}
+
+/** Deriva um nome de ficheiro quando o sistema não o dá (fotos da câmara não trazem nome). */
+function nameForPhoto(uri: string, mimeType?: string, index = 0): string {
+  const fromUri = uri.split('?')[0].split('/').pop();
+  if (fromUri && /\.[a-z0-9]+$/i.test(fromUri)) return fromUri;
+  const ext = mimeType?.split('/')[1]?.replace('jpeg', 'jpg') ?? 'jpg';
+  return `foto-${index + 1}.${ext}`;
+}
+
+/** Normaliza um asset do ImagePicker para o nosso PickedFile. */
+function assetToPicked(a: ImagePicker.ImagePickerAsset, index: number): PickedFile {
+  return {
+    uri: a.uri,
+    name: a.fileName ?? nameForPhoto(a.uri, a.mimeType, index),
+    mimeType: a.mimeType ?? 'image/jpeg',
+    size: a.fileSize ?? null,
+  };
+}
+
+/**
+ * Abre a CÂMARA e devolve a foto tirada (ou [] se o utilizador cancelar).
+ * A câmara tira uma foto de cada vez; para enviar várias de uma vez, usar pickImages().
+ * Lança erro (com mensagem amigável) se a permissão for recusada.
+ */
+export async function takePhoto(): Promise<PickedFile[]> {
+  const perm = await ImagePicker.requestCameraPermissionsAsync();
+  if (!perm.granted) {
+    throw new Error('Sem acesso à câmara. Ativa a permissão nas definições do telemóvel.');
+  }
+  const result = await ImagePicker.launchCameraAsync({
+    mediaTypes: ['images'],
+    quality: 0.7,
+  });
+  if (result.canceled || !result.assets?.length) return [];
+  return result.assets.map(assetToPicked);
+}
+
+/**
+ * Abre a GALERIA de fotos com seleção MÚLTIPLA (uma ou várias de uma vez).
+ * Devolve [] se o utilizador cancelar. Lança erro se a permissão for recusada.
+ */
+export async function pickImages(): Promise<PickedFile[]> {
+  const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (!perm.granted) {
+    throw new Error('Sem acesso às fotos. Ativa a permissão nas definições do telemóvel.');
+  }
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ['images'],
+    allowsMultipleSelection: true,
+    quality: 0.7,
+  });
+  if (result.canceled || !result.assets?.length) return [];
+  return result.assets.map(assetToPicked);
 }
 
 /**
