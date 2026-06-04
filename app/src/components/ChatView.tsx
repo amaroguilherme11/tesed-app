@@ -31,9 +31,13 @@ import { colors, fontSize, radius, spacing } from '@/theme';
 export function ChatView({
   conversationId,
   lockedReason,
+  extraKeyboardOffset = 0,
 }: {
   conversationId: string;
   lockedReason?: string | null;
+  /** Altura extra acima do chat (ex.: barra de telemóvel do médico) para o
+   *  cálculo do teclado no iOS. */
+  extraKeyboardOffset?: number;
 }) {
   const { session } = useAuth();
   const uid = session?.user.id ?? '';
@@ -100,9 +104,9 @@ export function ChatView({
     <KeyboardAvoidingView
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      // No iOS, o offset do cabeçalho é essencial para o 'padding' calcular o
-      // espaço certo (senão a barra de escrita fica tapada pelo teclado).
-      keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}
+      // No iOS, o offset do cabeçalho (+ barras extra acima) é essencial para o
+      // 'padding' calcular o espaço certo (senão a barra de escrita fica tapada).
+      keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight + extraKeyboardOffset : 0}
     >
       <FlatList
         ref={listRef}

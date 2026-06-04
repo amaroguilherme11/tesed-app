@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect } from 'react';
+import { useCallback, useLayoutEffect, useState } from 'react';
 import { Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { ChatView } from '@/components/ChatView';
@@ -9,6 +9,8 @@ import { colors, fontSize, spacing } from '@/theme';
 /** Conversa do médico com um paciente específico (a partir da caixa de entrada). */
 export function DoctorConversationScreen({ route, navigation }: any) {
   const { conversationId, patientName, patientPhone } = route.params;
+  // Altura da barra de telemóvel — passada ao ChatView para o cálculo do teclado.
+  const [contactBarHeight, setContactBarHeight] = useState(0);
 
   // Marca como lida pelo médico enquanto o chat está em foco.
   useFocusEffect(
@@ -45,7 +47,11 @@ export function DoctorConversationScreen({ route, navigation }: any) {
     <View style={styles.flex}>
       {/* Barra de contacto do paciente: telemóvel + ligar. */}
       {patientPhone ? (
-        <Pressable onPress={callPatient} style={styles.contactBar}>
+        <Pressable
+          onPress={callPatient}
+          style={styles.contactBar}
+          onLayout={(e) => setContactBarHeight(e.nativeEvent.layout.height)}
+        >
           <View style={styles.flex}>
             <Text style={styles.contactLabel}>Telemóvel do paciente</Text>
             <Text style={styles.contactPhone}>{patientPhone}</Text>
@@ -56,7 +62,7 @@ export function DoctorConversationScreen({ route, navigation }: any) {
         </Pressable>
       ) : null}
       <View style={styles.flex}>
-        <ChatView conversationId={conversationId} />
+        <ChatView conversationId={conversationId} extraKeyboardOffset={contactBarHeight} />
       </View>
     </View>
   );
