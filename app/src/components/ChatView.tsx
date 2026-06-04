@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useHeaderHeight } from '@react-navigation/elements';
 import { useChat } from '@/hooks/useChat';
 import { useAuth } from '@/contexts/AuthContext';
 import { MessageBubble } from '@/components/MessageBubble';
@@ -43,6 +44,7 @@ export function ChatView({
   const listRef = useRef<FlatList>(null);
   const locked = !!lockedReason;
   const insets = useSafeAreaInsets();
+  const headerHeight = useHeaderHeight();
 
   const onSend = async () => {
     const body = text.trim();
@@ -98,6 +100,9 @@ export function ChatView({
     <KeyboardAvoidingView
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      // No iOS, o offset do cabeçalho é essencial para o 'padding' calcular o
+      // espaço certo (senão a barra de escrita fica tapada pelo teclado).
+      keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}
     >
       <FlatList
         ref={listRef}

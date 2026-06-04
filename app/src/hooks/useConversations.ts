@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { AppState } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { InboxGroup, InboxRow } from '@/lib/types';
 
 // Contador para garantir nomes de canal únicos (evita conflito quando o hook é
 // usado em dois ecrãs montados ao mesmo tempo: inbox + chats da família).
 let channelSeq = 0;
+// Polling de segurança da caixa de entrada (ms) — apanha eventos se o WS cair.
+const INBOX_POLL_MS = 6000;
 
 /**
  * Caixa de entrada do médico: conversas agrupadas por titular.
@@ -88,14 +91,26 @@ export function useConversations() {
 
   useEffect(() => {
     load();
+    // (1) Realtime — atualização instantânea quando a ligação está viva.
     const channel = supabase
       .channel(channelName)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' }, () => {
         load();
       })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
+        load();
+      })
       .subscribe();
+    // (2) Polling de segurança (WS pode cair em iOS/redes móveis).
+    const poll = setInterval(load, INBOX_POLL_MS);
+    // (3) Refetch ao voltar a primeiro plano.
+    const appStateSub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') load();
+    });
     return () => {
       supabase.removeChannel(channel);
+      clearInterval(poll);
+      appStateSub.remove();
     };
   }, [load, channelName]);
 
