@@ -22,7 +22,10 @@ e depois promover a produção. Inclui checklist e textos prontos.
 ## Parte A — Dados da app (ficha principal)
 
 ### Identificação
-- **Nome da app:** `Tesed` (ou `Tesed — Saúde Integrada`)
+- **Nome da app (título na Play Store):** `Tesed Chat`
+  > Define-se na Play Console (**Loja → Ficha principal → Nome da app**, máx. 30 car.)
+  > — **não precisa de build novo**. O nome por baixo do ícone no telemóvel continua
+  > "Tesed" (vem do build); só muda com um build novo, se quiserem alinhar.
 - **Nome do pacote (package):** `pt.tesed.app` (já definido; **imutável** depois de publicado)
 - **Categoria:** Medicina (ou Saúde e fitness)
 - **Email de contacto:** [email de suporte da Tesed]
@@ -96,8 +99,12 @@ A Play Console exige preencher, antes de publicar:
    os perfis de dependentes são geridos por um adulto titular).
 3. **Data safety (Segurança dos dados)** — declarar que dados a app recolhe e
    porquê. Para o Tesed, declarar:
-   - Recolhe: nome, email, telemóvel, data de nascimento, mensagens, ficheiros
-     (que podem conter info de saúde), identificador para notificações.
+   - Recolhe: nome, email, telemóvel, data de nascimento, mensagens, ficheiros e
+     **fotos** (tiradas com a câmara ou escolhidas da galeria — podem conter info
+     de saúde), identificador para notificações.
+   - **Fotos e vídeos / Câmara:** a app acede à câmara e às fotos **só** para o
+     utilizador enviar imagens numa conversa (não percorre a galeria). Declarar
+     na categoria "Fotos e vídeos".
    - Encriptado em trânsito: **sim**.
    - Partilha com terceiros: apenas subcontratantes necessários (alojamento UE).
    - O utilizador pode pedir eliminação dos dados: **sim** (direito RGPD).
@@ -130,6 +137,34 @@ eas submit --platform android --profile production
 Requer uma **chave de conta de serviço Google** (JSON) com permissão na Play
 Console. Configura-se uma vez. Posso guiar-te quando chegarmos a esse ponto — para
 o primeiro teste interno, carregar o `.aab` à mão na consola também serve.
+
+---
+
+## Parte F — Promover para Produção (lançamento público)
+
+Estado: o **vc10** (0.1.0, **já com a câmara/fotos**) está **Ativo** no Teste interno
+e foi validado em dispositivo real. Não é preciso build novo — promove-se este.
+
+1. Play Console → app → **Produção** → **Criar nova versão**.
+2. Em vez de carregar um `.aab` novo, usar **"Adicionar do histórico de versões"**
+   (ou *Promote release* a partir do Teste interno) e escolher o **vc10**.
+   - Alternativa: carregar à mão o ficheiro `tesed-vc10.aab`.
+3. **Notas da versão** (release notes) — ver Parte A (1.ª versão).
+4. Antes de a Play Console deixar publicar em Produção, têm de estar **verdes**:
+   - ✅ Ficha principal completa (nome **"Tesed Chat"**, descrições, ícone,
+     feature graphic, **2–8 screenshots**).
+   - ✅ **Política de Privacidade** num URL público (e indicada na consola).
+   - ✅ **Classificação de conteúdo** (questionário).
+   - ✅ **Público-alvo e conteúdo**.
+   - ✅ **Data safety** — incluindo **Fotos e vídeos / Câmara** (ver Parte C).
+   - ✅ Declaração de **app de saúde**, se pedida.
+5. **Lançamento gradual (recomendado):** começar com *rollout* a 20–50% e subir,
+   ou 100% se preferirem ir direto. Depois de submeter, fica **"Em análise"**
+   (a 1.ª publicação em produção pode demorar dias na Google).
+6. Quando a Google aprovar, a app fica **pública** na Play Store para toda a gente.
+
+> ⚠️ Antes de abrir ao público: **limpar contas/conversas de teste** (ver
+> `docs/PENDENTES-PRODUCAO.md`) para não deixar dados de teste à vista.
 
 ---
 

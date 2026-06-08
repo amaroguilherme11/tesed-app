@@ -18,8 +18,9 @@ porquê, como os protegemos e que direitos tem.
 - **Dados de conta:** nome, email, data de nascimento, número de telemóvel.
 - **Perfis de dependentes (plano família):** nome e data de nascimento de
   familiares que o titular adicione (sem conta própria).
-- **Conteúdo das conversas:** mensagens e **ficheiros/anexos** que troca com o
-  médico (que podem conter **dados de saúde** — exames, relatórios, etc.).
+- **Conteúdo das conversas:** mensagens, **ficheiros/anexos** e **fotografias**
+  (tiradas com a câmara ou escolhidas da galeria) que troca com o médico (que
+  podem conter **dados de saúde** — exames, relatórios, imagens de uma lesão, etc.).
 - **Dados técnicos:** identificador de dispositivo para notificações (token
   push), registos técnicos mínimos de funcionamento.
 - **Não recolhemos** dados de pagamento na app: a compra de subscrições é feita
@@ -73,14 +74,22 @@ A app permite que um titular adulto crie **perfis de dependentes** (ex.: filhos)
 O titular declara ter autoridade parental/legal para fornecer esses dados e
 consente o respetivo tratamento.
 
-## 10. Notificações
+## 10. Permissões do dispositivo (câmara e fotos)
+A app pede acesso à **câmara** e às **fotografias** apenas quando escolhe enviar
+uma imagem numa conversa — para poder tirar uma foto ou selecionar fotos da
+galeria. **Só** acedemos às fotos que selecionar para enviar; não percorremos
+nem recolhemos a sua galeria. Pode recusar ou revogar estas permissões nas
+definições do dispositivo (nesse caso, não conseguirá enviar fotos pela câmara/galeria,
+mas pode continuar a usar o resto da app).
+
+## 11. Notificações
 Pode desativar as notificações nas definições do dispositivo a qualquer momento.
 
-## 11. Alterações a esta política
+## 12. Alterações a esta política
 Podemos atualizar esta política; alterações materiais serão comunicadas na app
 ou por email.
 
-## 12. Contacto
+## 13. Contacto
 [NOME DA EMPRESA] · [morada] · [email de privacidade] · [telefone].
 
 ---
