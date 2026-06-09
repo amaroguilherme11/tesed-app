@@ -5,7 +5,18 @@
 > lê o docs/PROXIMOS-PASSOS.md"*. Tudo está commitado no Git (backup privado em
 > github.com/amaroguilherme11/tesed-app) e documentado.
 
-Última atualização: fim da sessão em que a **vc7 ficou pronta e testada**.
+Última atualização: **2026-06-09** — app **submetida para revisão nas duas lojas**.
+
+> 🚀 **MARCO (2026-06-09):** Tesed Chat submetida para revisão em **Google Play**
+> (Produção, build vc10, rollout 100%) e **App Store** (versão 1.0, build iOS nº 5).
+> A aguardar aprovação das duas plataformas (a 1.ª revisão pode demorar dias; apps de
+> saúde podem ter escrutínio extra). Guias usados: `docs/SUBMISSAO-GOOGLE-PLAY.md` e
+> `docs/SUBMISSAO-APP-STORE.md`. Quando aprovarem, ficam públicas (Google em
+> publicação automática; App Store em "lançar automaticamente após aprovação").
+>
+> **Depois da aprovação:** confirmar instalação pública, limpar dados de teste se
+> ainda não feito, e planear a 1.ª atualização (ver recomendações Google Play em
+> `docs/PENDENTES-PRODUCAO.md` + subir Expo SDK).
 
 ---
 

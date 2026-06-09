@@ -57,15 +57,19 @@ website (fora da app) e ativadas na app através de um código.
 
 ## Estado atual
 
-> 🟢 **RESUMO (ler primeiro):** App **Android funcional e testada em teste interno**
-> (Play Console), build **vc7**. Todas as fases 1–8 feitas. Identidade Tesed aplicada,
+> 🟢 **RESUMO (ler primeiro):** App **submetida para revisão nas duas lojas (2026-06-09)** —
+> Google Play (Produção, build **vc10**) e App Store (versão **1.0**, build iOS nº 5).
+> Antes disso já estava testada em teste interno (Android). Todas as fases 1–8 feitas. Identidade Tesed aplicada,
 > notificações push (FCM) a funcionar, reset de password + confirmação de email
 > (deep links), SMTP @tesed.pt, dashboard de pacientes, multi-ficheiro, indicador de
 > não-lidas. Textos usam **"terapeuta"** (não "médico"). Migrações 0001–0018 aplicadas.
 > Edge Functions deployed. Backup Git privado em github.com/amaroguilherme11/tesed-app.
 >
-> **PRÓXIMO:** (a) publicar Android a sério (ficha da loja, política privacidade,
-> questionários) e (b) **desenvolver versão iOS**. Ver **`docs/PROXIMOS-PASSOS.md`**.
+> **PRÓXIMO:** aguardar aprovação das lojas (pode demorar dias; apps de saúde têm
+> escrutínio extra). Quando aprovarem: confirmar instalação pública, limpar dados de
+> teste (se ainda não feito) e planear a 1.ª atualização (recomendações Google Play
+> + subir Expo SDK — ver `docs/PENDENTES-PRODUCAO.md`). Guias de loja:
+> `docs/SUBMISSAO-GOOGLE-PLAY.md` e `docs/SUBMISSAO-APP-STORE.md`. Ver **`docs/PROXIMOS-PASSOS.md`**.
 > Ferramentas instaladas: Node, Git, Supabase CLI, EAS CLI, gh (PATH:
 > `C:\Users\Amaro\AppData\Roaming\npm` + `C:\Users\Amaro\scoop\shims`).
 
