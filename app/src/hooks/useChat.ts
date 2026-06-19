@@ -56,10 +56,16 @@ export function useChat(conversationId: string | null) {
       if (data) applyServerList(data as Message[]);
     };
 
-    // 1ª carga
-    refetch().then(() => {
-      if (active) setLoading(false);
-    });
+    // 1ª carga — try/finally garante que o spinner SAI mesmo que a query rejeite
+    // (ex.: falha de rede/sessão na web). Sem isto, um reject deixava o chat
+    // preso a carregar para sempre (o .then() nunca corria).
+    (async () => {
+      try {
+        await refetch();
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
 
     // (1) Realtime — entrega instantânea. Qualquer evento desta conversa ou dos
     // anexos despoleta um refetch (simples e robusto: a fonte de verdade é o servidor).

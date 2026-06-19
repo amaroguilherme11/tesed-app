@@ -17,7 +17,8 @@ independente do WordPress do site principal).
 | `app/src/lib/supabase.ts` | `detectSessionInUrl: Platform.OS === 'web'` — em web, o supabase-js processa os tokens que vêm no URL (confirmação de email / reset de password abrem no browser). Em mobile continua `false` (deep link `tesed://` tratado à mão). |
 | `app/src/contexts/AuthContext.tsx` | O tratamento manual de deep link (`Linking`) passa a ser **só mobile**; em web o `PASSWORD_RECOVERY` chega via `onAuthStateChange`. |
 | `app/src/lib/notifications.ts` | `setNotificationHandler` **não** corre em web (push desligado na web). `registerForPush` já tinha guard de web. |
-| `app/App.tsx` | `AppFrame`: em web, centra a app numa **coluna de largura máx. 480px** sobre fundo neutro (não estica feio no desktop). Em iOS/Android é passthrough. |
+| `app/App.tsx` | Em web a app ocupa a **página inteira** (sem moldura/coluna). |
+| `app/src/hooks/useChat.ts` | `setLoading(false)` em `try/finally` — o chat deixa de ficar preso a carregar se a query de mensagens rejeitar na web. |
 | `app/app.json` | `web.output: "single"` (SPA) + `bundler: "metro"` — certo para React Navigation e para o EAS Hosting servir o routing. |
 
 **Mantido na web:** envio de ficheiros/fotos (input do browser), Realtime, auth, chat.
@@ -86,7 +87,7 @@ Assim o utilizador chega à app web a partir do site, sem fricção.
 ## Pendente / a polir (não bloqueia)
 - Testar em web os fluxos completos: registo (confirmação de email no browser),
   reset de password, envio de ficheiros/fotos, chat em tempo real.
-- Responsivo: a coluna 480px funciona; afinar se quiserem um layout "largo" dedicado
-  a desktop (opcional).
+- Responsivo: a app ocupa a página toda; em monitores muito largos os ecrãs esticam —
+  se quiserem, pode limitar-se a largura do conteúdo por ecrã (opcional).
 - Quando `app.tesed.pt` estiver ativo, **a página web de reset de password autónoma
   deixa de ser necessária** — os ecrãs de reset da própria app web tratam disso.
