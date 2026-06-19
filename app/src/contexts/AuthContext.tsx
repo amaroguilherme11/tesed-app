@@ -185,6 +185,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email,
       password,
       options: {
+        // O email de confirmação redireciona para ONDE o utilizador se registou:
+        // web -> https://app.tesed.pt/confirm ; mobile -> tesed://confirm (deep link).
+        // (O reset de password já faz o mesmo via redirectTo no ForgotPasswordScreen.)
+        emailRedirectTo: Linking.createURL('confirm'),
         data: {
           full_name: fullName,
           consent: 'true',

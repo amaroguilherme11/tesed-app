@@ -15,7 +15,7 @@ independente do WordPress do site principal).
 | Ficheiro | Mudança |
 |---|---|
 | `app/src/lib/supabase.ts` | `detectSessionInUrl: Platform.OS === 'web'` — em web, o supabase-js processa os tokens que vêm no URL (confirmação de email / reset de password abrem no browser). Em mobile continua `false` (deep link `tesed://` tratado à mão). |
-| `app/src/contexts/AuthContext.tsx` | O tratamento manual de deep link (`Linking`) passa a ser **só mobile**; em web o `PASSWORD_RECOVERY` chega via `onAuthStateChange`. |
+| `app/src/contexts/AuthContext.tsx` | O tratamento manual de deep link (`Linking`) passa a ser **só mobile**; em web o `PASSWORD_RECOVERY` chega via `onAuthStateChange`. O registo passa `emailRedirectTo` (web→`https://app.tesed.pt/confirm`, mobile→`tesed://confirm`) para o **email de confirmação** abrir onde o utilizador se registou. |
 | `app/src/lib/notifications.ts` | `setNotificationHandler` **não** corre em web (push desligado na web). `registerForPush` já tinha guard de web. |
 | `app/App.tsx` | Em web a app ocupa a **página inteira** (sem moldura/coluna). |
 | `app/src/hooks/useChat.ts` | `setLoading(false)` em `try/finally` — o chat deixa de ficar preso a carregar se a query de mensagens rejeitar na web. |
