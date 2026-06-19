@@ -14,15 +14,18 @@ import { supabase } from '@/lib/supabase';
  * send-notification os usar.
  */
 
-// Como mostrar notificações com a app aberta.
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
+// Como mostrar notificações com a app aberta. Na web não há push, por isso não
+// configuramos o handler (evita avisos/erros do expo-notifications no browser).
+if (Platform.OS !== 'web') {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+    }),
+  });
+}
 
 let lastToken: string | null = null;
 

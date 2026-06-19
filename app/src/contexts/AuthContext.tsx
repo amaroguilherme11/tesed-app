@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
+import { Platform } from 'react-native';
 import * as Linking from 'expo-linking';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
@@ -145,13 +146,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading(false);
       }
     };
-    Linking.getInitialURL().then(handleUrl);
-    const linkingSub = Linking.addEventListener('url', (e: { url: string }) => handleUrl(e.url));
+    // Em web, o supabase-js trata dos tokens no URL (detectSessionInUrl: true) e
+    // o PASSWORD_RECOVERY chega via onAuthStateChange — o tratamento manual via
+    // Linking é só para o deep link tesed:// do mobile.
+    let linkingSub: { remove: () => void } | undefined;
+    if (Platform.OS !== 'web') {
+      Linking.getInitialURL().then(handleUrl);
+      linkingSub = Linking.addEventListener('url', (e: { url: string }) => handleUrl(e.url));
+    }
 
     return () => {
       active = false;
       sub.subscription.unsubscribe();
-      linkingSub.remove();
+      linkingSub?.remove();
     };
   }, []);
 

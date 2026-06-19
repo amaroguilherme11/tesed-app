@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 
@@ -22,6 +23,9 @@ export const supabase = createClient(supabaseUrl ?? '', supabaseAnonKey ?? '', {
     storage: AsyncStorage,
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false,
+    // Em web, deixamos o supabase-js processar os tokens que vêm no URL
+    // (confirmação de email / recuperação de password abrem no browser).
+    // Em mobile é false: o deep link tesed:// é tratado à mão no AuthContext.
+    detectSessionInUrl: Platform.OS === 'web',
   },
 });
