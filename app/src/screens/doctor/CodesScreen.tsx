@@ -8,6 +8,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { Button } from '@/components/Button';
 import { confirmAction } from '@/lib/confirm';
 import { createFreeCode, listCodes, revokeCode } from '@/lib/subscriptions';
@@ -104,12 +105,20 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 function CodeRow({ item, onRevoke }: { item: SubscriptionCode; onRevoke: () => void }) {
+  const [copied, setCopied] = useState(false);
   const statusColor =
     item.status === 'active'
       ? colors.primary
       : item.status === 'used'
         ? colors.textMuted
         : colors.danger;
+
+  const onCopy = async () => {
+    await Clipboard.setStringAsync(item.code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
   return (
     <View style={styles.row}>
       <View style={styles.flex}>
@@ -121,11 +130,16 @@ function CodeRow({ item, onRevoke }: { item: SubscriptionCode; onRevoke: () => v
       </View>
       <View style={styles.rowRight}>
         <Text style={[styles.status, { color: statusColor }]}>{STATUS_LABEL[item.status]}</Text>
-        {item.status === 'active' && (
-          <Pressable onPress={onRevoke} hitSlop={8}>
-            <Text style={styles.revoke}>Revogar</Text>
+        <View style={styles.rowActions}>
+          <Pressable onPress={onCopy} hitSlop={8}>
+            <Text style={styles.copy}>{copied ? 'Copiado ✓' : 'Copiar'}</Text>
           </Pressable>
-        )}
+          {item.status === 'active' && (
+            <Pressable onPress={onRevoke} hitSlop={8}>
+              <Text style={styles.revoke}>Revogar</Text>
+            </Pressable>
+          )}
+        </View>
       </View>
     </View>
   );
@@ -152,6 +166,8 @@ const styles = StyleSheet.create({
   code: { fontSize: fontSize.base, fontWeight: '700', color: colors.text, letterSpacing: 1 },
   meta: { fontSize: fontSize.sm, color: colors.textMuted, marginTop: 2 },
   rowRight: { alignItems: 'flex-end', gap: spacing.xs },
+  rowActions: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   status: { fontSize: fontSize.sm, fontWeight: '600' },
+  copy: { color: colors.primary, fontSize: fontSize.sm, fontWeight: '600' },
   revoke: { color: colors.danger, fontSize: fontSize.sm, fontWeight: '600' },
 });

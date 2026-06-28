@@ -18,6 +18,7 @@ import { useChat } from '@/hooks/useChat';
 import { useAuth } from '@/contexts/AuthContext';
 import { MessageBubble } from '@/components/MessageBubble';
 import { pickFiles, pickImages, takePhoto, sendAttachment, PickedFile } from '@/lib/attachments';
+import { formatDateSeparator, isSameDay } from '@/lib/date';
 import { colors, fontSize, radius, spacing } from '@/theme';
 
 /**
@@ -136,14 +137,27 @@ export function ChatView({
         ref={listRef}
         data={messages}
         keyExtractor={(m) => m.id}
-        renderItem={({ item }) => (
-          <MessageBubble
-            body={item.body}
-            createdAt={item.created_at}
-            mine={item.sender_id === uid}
-            attachments={item.attachments}
-          />
-        )}
+        renderItem={({ item, index }) => {
+          // Separador de dia (estilo WhatsApp): mostra-se antes da 1ª mensagem
+          // e sempre que o dia muda em relação à mensagem anterior.
+          const prev = index > 0 ? messages[index - 1] : null;
+          const showDate = !prev || !isSameDay(prev.created_at, item.created_at);
+          return (
+            <>
+              {showDate && (
+                <View style={styles.daySepWrap}>
+                  <Text style={styles.daySepText}>{formatDateSeparator(item.created_at)}</Text>
+                </View>
+              )}
+              <MessageBubble
+                body={item.body}
+                createdAt={item.created_at}
+                mine={item.sender_id === uid}
+                attachments={item.attachments}
+              />
+            </>
+          );
+        }}
         contentContainerStyle={styles.listContent}
         onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
         ListEmptyComponent={
@@ -218,6 +232,19 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
   listContent: { paddingVertical: spacing.md, flexGrow: 1 },
   empty: { textAlign: 'center', color: colors.textMuted, marginTop: spacing.xl },
+  daySepWrap: { alignItems: 'center', marginVertical: spacing.sm },
+  daySepText: {
+    fontSize: fontSize.sm,
+    color: colors.textMuted,
+    fontWeight: '600',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.base,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs / 2,
+    overflow: 'hidden',
+  },
   composer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
