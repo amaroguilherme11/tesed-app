@@ -76,11 +76,33 @@ export async function registerForPush(): Promise<void> {
   }
 }
 
-/** Remove o token do servidor (ex.: ao terminar sessão neste dispositivo). */
+/**
+ * Remove o token do servidor (ex.: ao terminar sessão neste dispositivo) para
+ * deixar de receber notificações da conta que sai.
+ *
+ * Importante: se o token não estiver em memória (ex.: arranque a frio seguido de
+ * logout), vamos buscá-lo ao dispositivo para o conseguir remover — senão ficava
+ * no servidor e a conta antiga continuava a notificar este telemóvel.
+ */
 export async function unregisterForPush(): Promise<void> {
   try {
-    if (!lastToken) return;
-    await supabase.rpc('unregister_device_token', { p_token: lastToken });
+    if (Platform.OS === 'web') return;
+
+    let token = lastToken;
+    if (!token && Device.isDevice && Constants.appOwnership !== 'expo') {
+      const projectId =
+        Constants.expoConfig?.extra?.eas?.projectId ??
+        (Constants as any).easConfig?.projectId;
+      const resp = await Notifications.getExpoPushTokenAsync(
+        projectId ? { projectId } : undefined,
+      );
+      token = resp.data;
+    }
+    if (!token) return;
+
+    // Chamado ANTES do signOut, por isso auth.uid() ainda é a conta que sai:
+    // o RPC remove a linha (token + user_id) e o servidor deixa de notificar.
+    await supabase.rpc('unregister_device_token', { p_token: token });
     lastToken = null;
   } catch {
     // silencioso

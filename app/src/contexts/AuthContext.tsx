@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
-import { Platform } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import * as Linking from 'expo-linking';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
@@ -35,17 +35,34 @@ type AuthState = {
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
 
+/** Promise que rejeita ao fim de `ms` — evita ficar pendurado num pedido que não responde. */
+function withTimeout<T>(p: PromiseLike<T>, ms: number): Promise<T> {
+  return Promise.race([
+    Promise.resolve(p),
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error('timeout')), ms)),
+  ]);
+}
+
+/**
+ * Carrega o perfil do utilizador. Tenta várias vezes, cada uma com timeout, para
+ * ser robusto no arranque a frio (rede ainda não pronta). Sem isto, a app podia
+ * ficar "a pensar" para sempre (sessão guardada mas sem perfil) e obrigar a reabrir.
+ */
 async function fetchProfile(userId: string): Promise<Profile | null> {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single();
-  if (error) {
-    console.warn('[Tesed] Falha a carregar o perfil:', error.message);
-    return null;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    try {
+      const { data, error } = await withTimeout(
+        supabase.from('profiles').select('*').eq('id', userId).single(),
+        8000,
+      );
+      if (!error && data) return data as Profile;
+    } catch {
+      // timeout ou erro de rede — tenta de novo
+    }
+    await new Promise((r) => setTimeout(r, 1200 * (attempt + 1)));
   }
-  return data as Profile;
+  console.warn('[Tesed] Não foi possível carregar o perfil após várias tentativas.');
+  return null;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -60,19 +77,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     recoveringRef.current = v;
     setRecoveringPassword(v);
   };
+  // Ref para o handler de AppState ler o perfil atual sem recriar o efeito.
+  const profileRef = useRef<Profile | null>(null);
+  profileRef.current = profile;
 
   useEffect(() => {
     let active = true;
 
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (!active) return;
-      setSession(data.session);
-      if (data.session) {
-        setProfile(await fetchProfile(data.session.user.id));
-        registerForPush();
-      }
-      setLoading(false);
-    });
+    supabase.auth
+      .getSession()
+      .then(async ({ data }) => {
+        if (!active) return;
+        setSession(data.session);
+        if (data.session) {
+          const p = await fetchProfile(data.session.user.id);
+          if (active) setProfile(p);
+          registerForPush();
+        }
+      })
+      .catch((e: any) => console.warn('[Tesed] getSession falhou:', e?.message ?? e))
+      .finally(() => {
+        // CRÍTICO: o spinner sai sempre, mesmo que getSession/fetchProfile falhem.
+        if (active) setLoading(false);
+      });
 
     const { data: sub } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       // Link de recuperação: o Supabase emite PASSWORD_RECOVERY com uma sessão
@@ -155,10 +182,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       linkingSub = Linking.addEventListener('url', (e: { url: string }) => handleUrl(e.url));
     }
 
+    // Se a app volta a primeiro plano com sessão mas SEM perfil (ex.: o arranque
+    // não o conseguiu carregar), tenta de novo — evita ter de fechar e reabrir.
+    const appStateSub = AppState.addEventListener('change', async (state) => {
+      if (state !== 'active' || !active || recoveringRef.current) return;
+      const { data } = await supabase.auth.getSession();
+      if (active && data.session && !profileRef.current) {
+        const p = await fetchProfile(data.session.user.id);
+        if (active) setProfile(p);
+      }
+    });
+
     return () => {
       active = false;
       sub.subscription.unsubscribe();
       linkingSub?.remove();
+      appStateSub.remove();
     };
   }, []);
 
