@@ -17,7 +17,9 @@
         "CFBundleURLTypes": [
           {
             "CFBundleURLName": "pt.tesed.app",
-            "CFBundleURLSchemes": ["tesed"]
+            "CFBundleURLSchemes": [
+              "tesed"
+            ]
           }
         ]
       }
@@ -75,6 +77,12 @@
         }
       ]
     ],
-    "owner": "maromaro11"
+    "owner": "maromaro11",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/8c51abfc-e5f9-4a67-b7eb-c3fd713d0366"
+    }
   }
 }
