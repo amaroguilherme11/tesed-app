@@ -4,6 +4,9 @@ node_modules/
 dist/
 web-build/
 
+# Zips de submissão da web (gerados a partir do dist; não versionar)
+webapp-submissions/
+
 # Ambiente / segredos (NUNCA commitar)
 .env
 .env.*
