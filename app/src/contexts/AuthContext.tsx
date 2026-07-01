@@ -44,24 +44,20 @@ function withTimeout<T>(p: PromiseLike<T>, ms: number): Promise<T> {
 }
 
 /**
- * Carrega o perfil do utilizador. Tenta várias vezes, cada uma com timeout, para
- * ser robusto no arranque a frio (rede ainda não pronta). Sem isto, a app podia
- * ficar "a pensar" para sempre (sessão guardada mas sem perfil) e obrigar a reabrir.
+ * Carrega o perfil (uma tentativa, com timeout para não pendurar). A REPETIÇÃO
+ * fica a cargo de quem chama (efeito de auto-recuperação + AppState), para o
+ * arranque a frio recuperar sozinho sem ficar preso no spinner.
  */
 async function fetchProfile(userId: string): Promise<Profile | null> {
-  for (let attempt = 0; attempt < 4; attempt++) {
-    try {
-      const { data, error } = await withTimeout(
-        supabase.from('profiles').select('*').eq('id', userId).single(),
-        8000,
-      );
-      if (!error && data) return data as Profile;
-    } catch {
-      // timeout ou erro de rede — tenta de novo
-    }
-    await new Promise((r) => setTimeout(r, 1200 * (attempt + 1)));
+  try {
+    const { data, error } = await withTimeout(
+      supabase.from('profiles').select('*').eq('id', userId).single(),
+      6000,
+    );
+    if (!error && data) return data as Profile;
+  } catch {
+    // timeout ou erro de rede — o chamador volta a tentar
   }
-  console.warn('[Tesed] Não foi possível carregar o perfil após várias tentativas.');
   return null;
 }
 
@@ -83,6 +79,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true;
+
+    // Rede de segurança: se o arranque estalar (ex.: getSession preso no cold
+    // start), o spinner sai ao fim de 5s — a sessão/perfil entram depois pelo
+    // onAuthStateChange e pela auto-recuperação assim que o Supabase responder.
+    const safety = setTimeout(() => {
+      if (active) setLoading(false);
+    }, 5000);
 
     supabase.auth
       .getSession()
@@ -195,11 +198,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       active = false;
+      clearTimeout(safety);
       sub.subscription.unsubscribe();
       linkingSub?.remove();
       appStateSub.remove();
     };
   }, []);
+
+  // Auto-recuperação: se há sessão mas o perfil ainda não carregou (típico no
+  // arranque a frio, com o token do Supabase ainda a renovar), tenta a cada 2,5s
+  // até conseguir — a app recupera SOZINHA, sem o utilizador fechar e reabrir.
+  useEffect(() => {
+    if (!session || profile || recoveringPassword) return;
+    let cancelled = false;
+    const id = setInterval(async () => {
+      if (cancelled) return;
+      const p = await fetchProfile(session.user.id);
+      if (!cancelled && p) setProfile(p);
+    }, 2500);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [session, profile, recoveringPassword]);
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
