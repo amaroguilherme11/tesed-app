@@ -3,10 +3,12 @@
 Itens a tratar **antes do lançamento público** (após o teste interno). Alguns
 foram simplificados/desligados durante o desenvolvimento e têm de ser repostos.
 
-> 🚀 **ESTADO (2026-06-09):** app **submetida para revisão em ambas as plataformas** —
-> Google Play (Produção, build vc10) e App Store (versão 1.0, build iOS nº 5). A
-> aguardar aprovação. Os itens abaixo marcados continuam pendentes para a próxima
-> atualização ou para confirmar.
+> 🚀 **ESTADO (2026-07-01):** app **publicada e a funcionar nas três plataformas** —
+> Google Play, App Store (**v1.0.2**) e Web (**chat.tesed.pt**, alojada no cPanel do
+> site). Fixes já lançados: notificações limpas no logout, auto-recuperação do
+> arranque (perfil recarrega sozinho, sem reabrir), caixa do terapeuta só com quem
+> teve subscrição (migração 0019), separadores de data e copiar código. Os itens
+> abaixo ficam para a **próxima atualização** ou para confirmar.
 
 ## 🔒 Segurança / Auth
 - [ ] **Reativar confirmação de email no registo.** Foi desligada para testes.
@@ -66,3 +68,15 @@ um **build novo (vc11)**, idealmente junto com uma **subida de Expo SDK**.
       Só mexer se quisermos **suportar bem tablets/dobráveis** — implica tirar o lock
       de portrait, **testar todos os ecrãs em horizontal** e fazer build novo.
       Decisão de produto (app é pensada para telemóvel em vertical).
+
+## 🔜 Melhorias da app (próxima atualização)
+
+- [ ] **Chat: abrir já nas mensagens mais recentes.** Ao entrar numa conversa, a
+      lista começa no topo e **desliza (animado)** até ao fim — vê-se o "salto".
+      Objetivo: mostrar **logo o fundo** (mensagens recentes), sem animação visível.
+      Onde: `app/src/components/ChatView.tsx` — o `FlatList` usa
+      `onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}`.
+      Fix sugerido: no **1.º carregamento** fazer `scrollToEnd({ animated: false })`
+      (salto instantâneo) e só **animar** nas mensagens seguintes; em alternativa,
+      usar `FlatList` **`inverted`** (renderiza de baixo para cima → o fundo aparece
+      logo). Vale para todas as plataformas (é código → precisa de build + re-deploy web).
