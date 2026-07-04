@@ -71,12 +71,7 @@ um **build novo (vc11)**, idealmente junto com uma **subida de Expo SDK**.
 
 ## 🔜 Melhorias da app (próxima atualização)
 
-- [ ] **Chat: abrir já nas mensagens mais recentes.** Ao entrar numa conversa, a
-      lista começa no topo e **desliza (animado)** até ao fim — vê-se o "salto".
-      Objetivo: mostrar **logo o fundo** (mensagens recentes), sem animação visível.
-      Onde: `app/src/components/ChatView.tsx` — o `FlatList` usa
-      `onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}`.
-      Fix sugerido: no **1.º carregamento** fazer `scrollToEnd({ animated: false })`
-      (salto instantâneo) e só **animar** nas mensagens seguintes; em alternativa,
-      usar `FlatList` **`inverted`** (renderiza de baixo para cima → o fundo aparece
-      logo). Vale para todas as plataformas (é código → precisa de build + re-deploy web).
+- [x] **Chat: abrir já nas mensagens mais recentes.** (Implementado na **1.0.3**.)
+      No `ChatView`, o `onContentSizeChange` faz o **1.º salto sem animação**
+      (`scrollToEnd({ animated: false })`) e só anima nas mensagens seguintes —
+      deixa de se ver o "deslizar do topo".

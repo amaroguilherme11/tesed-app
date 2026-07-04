@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
 import { AppState, Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Linking from 'expo-linking';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
@@ -61,6 +62,29 @@ async function fetchProfile(userId: string): Promise<Profile | null> {
   return null;
 }
 
+// --- Cache local do perfil (por utilizador) ---------------------------------
+// Permite ROUTING INSTANTÂNEO no arranque a frio: mostramos já a app com o
+// perfil guardado, enquanto o token do Supabase renova e o perfil fresco chega
+// em segundo plano. O papel (paciente/médico) muda raramente, por isso é seguro.
+const profileCacheKey = (uid: string) => `tesed_profile_${uid}`;
+
+async function loadCachedProfile(uid: string): Promise<Profile | null> {
+  try {
+    const raw = await AsyncStorage.getItem(profileCacheKey(uid));
+    return raw ? (JSON.parse(raw) as Profile) : null;
+  } catch {
+    return null;
+  }
+}
+
+async function cacheProfile(p: Profile): Promise<void> {
+  try {
+    await AsyncStorage.setItem(profileCacheKey(p.id), JSON.stringify(p));
+  } catch {
+    // a cache é só otimização — ignorar falhas
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -93,14 +117,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!active) return;
         setSession(data.session);
         if (data.session) {
-          const p = await fetchProfile(data.session.user.id);
-          if (active) setProfile(p);
+          // Routing INSTANTÂNEO: usa o perfil em cache (leitura local rápida).
+          // O spinner sai já (no finally) sem esperar pela rede/renovação do token.
+          const cached = await loadCachedProfile(data.session.user.id);
+          if (cached && active) setProfile(cached);
           registerForPush();
+          // Perfil fresco em SEGUNDO PLANO — sem await, não atrasa o arranque.
+          fetchProfile(data.session.user.id).then((fresh) => {
+            if (fresh && active) {
+              setProfile(fresh);
+              cacheProfile(fresh);
+            }
+          });
         }
       })
       .catch((e: any) => console.warn('[Tesed] getSession falhou:', e?.message ?? e))
       .finally(() => {
-        // CRÍTICO: o spinner sai sempre, mesmo que getSession/fetchProfile falhem.
+        // O spinner sai assim que temos sessão + perfil em cache (não espera o token).
         if (active) setLoading(false);
       });
 
@@ -121,9 +154,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
       setSession(newSession);
-      setProfile(newSession ? await fetchProfile(newSession.user.id) : null);
-      // Regista o dispositivo para push quando há sessão (no-op em Expo Go/web).
-      if (newSession) registerForPush();
+      if (newSession) {
+        const fresh = await fetchProfile(newSession.user.id);
+        if (fresh) {
+          setProfile(fresh);
+          cacheProfile(fresh);
+        } else {
+          // Token ainda a renovar → usa a cache para não ficar sem perfil
+          // (a auto-recuperação tenta de novo até obter o fresco).
+          const cached = await loadCachedProfile(newSession.user.id);
+          if (cached) setProfile(cached);
+        }
+        // Regista o dispositivo para push quando há sessão (no-op em Expo Go/web).
+        registerForPush();
+      } else {
+        setProfile(null);
+      }
     });
 
     // Deep links: quando a app abre por um link (ex.: recuperação de password),
@@ -192,7 +238,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data } = await supabase.auth.getSession();
       if (active && data.session && !profileRef.current) {
         const p = await fetchProfile(data.session.user.id);
-        if (active) setProfile(p);
+        if (active && p) {
+          setProfile(p);
+          cacheProfile(p);
+        }
       }
     });
 
@@ -206,7 +255,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Auto-recuperação: se há sessão mas o perfil ainda não carregou (típico no
-  // arranque a frio, com o token do Supabase ainda a renovar), tenta a cada 2,5s
+  // arranque a frio, com o token do Supabase ainda a renovar), tenta a cada 1s
   // até conseguir — a app recupera SOZINHA, sem o utilizador fechar e reabrir.
   useEffect(() => {
     if (!session || profile || recoveringPassword) return;
@@ -214,8 +263,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const id = setInterval(async () => {
       if (cancelled) return;
       const p = await fetchProfile(session.user.id);
-      if (!cancelled && p) setProfile(p);
-    }, 2500);
+      if (!cancelled && p) {
+        setProfile(p);
+        cacheProfile(p);
+      }
+    }, 1000);
     return () => {
       cancelled = true;
       clearInterval(id);
@@ -268,6 +320,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     // Remove o token deste dispositivo antes de sair (não recebe push de outra conta).
     await unregisterForPush();
+    // Limpa o perfil em cache (privacidade — não deixar dados após o logout).
+    if (session) AsyncStorage.removeItem(profileCacheKey(session.user.id)).catch(() => {});
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   };

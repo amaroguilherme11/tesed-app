@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -49,6 +49,12 @@ export function ChatView({
   const [uploading, setUploading] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const listRef = useRef<FlatList>(null);
+  // No 1.º carregamento da conversa saltamos para o fim SEM animação (mostra já
+  // as mensagens recentes, sem o "deslizar do topo"); nas mensagens seguintes anima.
+  const didInitialScroll = useRef(false);
+  useEffect(() => {
+    didInitialScroll.current = false;
+  }, [conversationId]);
   const locked = !!lockedReason;
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
@@ -159,7 +165,11 @@ export function ChatView({
           );
         }}
         contentContainerStyle={styles.listContent}
-        onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
+        onContentSizeChange={() => {
+          // 1.ª vez: salto instantâneo para o fim; depois anima (mensagens novas).
+          listRef.current?.scrollToEnd({ animated: didInitialScroll.current });
+          didInitialScroll.current = true;
+        }}
         ListEmptyComponent={
           <Text style={styles.empty}>Ainda não há mensagens. Escreve a primeira.</Text>
         }
