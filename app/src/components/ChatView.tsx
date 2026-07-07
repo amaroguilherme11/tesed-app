@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -48,13 +48,9 @@ export function ChatView({
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const listRef = useRef<FlatList>(null);
-  // No 1.º carregamento da conversa saltamos para o fim SEM animação (mostra já
-  // as mensagens recentes, sem o "deslizar do topo"); nas mensagens seguintes anima.
-  const didInitialScroll = useRef(false);
-  useEffect(() => {
-    didInitialScroll.current = false;
-  }, [conversationId]);
+  // Lista INVERTIDA: os dados vão do mais recente (fundo) para o mais antigo (topo),
+  // para o chat ABRIR JÁ nas mensagens recentes, sem qualquer scroll de abertura.
+  const data = useMemo(() => messages.slice().reverse(), [messages]);
   const locked = !!lockedReason;
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
@@ -139,41 +135,41 @@ export function ChatView({
       // 'padding' calcular o espaço certo (senão a barra de escrita fica tapada).
       keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight + extraKeyboardOffset : 0}
     >
-      <FlatList
-        ref={listRef}
-        data={messages}
-        keyExtractor={(m) => m.id}
-        renderItem={({ item, index }) => {
-          // Separador de dia (estilo WhatsApp): mostra-se antes da 1ª mensagem
-          // e sempre que o dia muda em relação à mensagem anterior.
-          const prev = index > 0 ? messages[index - 1] : null;
-          const showDate = !prev || !isSameDay(prev.created_at, item.created_at);
-          return (
-            <>
-              {showDate && (
-                <View style={styles.daySepWrap}>
-                  <Text style={styles.daySepText}>{formatDateSeparator(item.created_at)}</Text>
-                </View>
-              )}
-              <MessageBubble
-                body={item.body}
-                createdAt={item.created_at}
-                mine={item.sender_id === uid}
-                attachments={item.attachments}
-              />
-            </>
-          );
-        }}
-        contentContainerStyle={styles.listContent}
-        onContentSizeChange={() => {
-          // 1.ª vez: salto instantâneo para o fim; depois anima (mensagens novas).
-          listRef.current?.scrollToEnd({ animated: didInitialScroll.current });
-          didInitialScroll.current = true;
-        }}
-        ListEmptyComponent={
+      {data.length === 0 ? (
+        // Estado vazio à parte (a lista invertida viraria o texto ao contrário).
+        <View style={styles.emptyWrap}>
           <Text style={styles.empty}>Ainda não há mensagens. Escreve a primeira.</Text>
-        }
-      />
+        </View>
+      ) : (
+        <FlatList
+          style={styles.list}
+          data={data}
+          inverted
+          keyExtractor={(m) => m.id}
+          renderItem={({ item, index }) => {
+            // Lista invertida: o item "mais antigo, visualmente acima" é o seguinte
+            // no array (index+1). O separador de dia aparece acima da 1ª mensagem do dia.
+            const older = index < data.length - 1 ? data[index + 1] : null;
+            const showDate = !older || !isSameDay(older.created_at, item.created_at);
+            return (
+              <>
+                {showDate && (
+                  <View style={styles.daySepWrap}>
+                    <Text style={styles.daySepText}>{formatDateSeparator(item.created_at)}</Text>
+                  </View>
+                )}
+                <MessageBubble
+                  body={item.body}
+                  createdAt={item.created_at}
+                  mine={item.sender_id === uid}
+                  attachments={item.attachments}
+                />
+              </>
+            );
+          }}
+          contentContainerStyle={styles.listContent}
+        />
+      )}
 
       {locked ? (
         <View style={[styles.locked, { paddingBottom: spacing.md + insets.bottom }]}>
@@ -240,8 +236,10 @@ export function ChatView({
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.bg },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
-  listContent: { paddingVertical: spacing.md, flexGrow: 1 },
-  empty: { textAlign: 'center', color: colors.textMuted, marginTop: spacing.xl },
+  list: { flex: 1 },
+  listContent: { paddingVertical: spacing.md },
+  empty: { textAlign: 'center', color: colors.textMuted },
+  emptyWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.lg },
   daySepWrap: { alignItems: 'center', marginVertical: spacing.sm },
   daySepText: {
     fontSize: fontSize.sm,
