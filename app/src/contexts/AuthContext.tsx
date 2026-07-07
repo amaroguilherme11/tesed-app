@@ -85,6 +85,26 @@ async function cacheProfile(p: Profile): Promise<void> {
   }
 }
 
+// --- Renovação "rolante" do token ------------------------------------------
+// Em cada arranque / regresso a primeiro plano (com sessão), renovamos o token
+// em SEGUNDO PLANO. Assim a validade do access token vai sendo empurrada para a
+// frente e, para quem usa a app com regularidade, ele NUNCA expira entre
+// aberturas → nunca apanha a renovação lenta do arranque a frio. É throttled
+// para não fazer pedidos a mais. Não bloqueia o UI (nunca é aguardado no arranque).
+let lastRollingRefreshAt = 0;
+const ROLLING_REFRESH_THROTTLE_MS = 60 * 60 * 1000; // no máximo 1×/hora
+
+async function rollingRefresh(): Promise<void> {
+  const now = Date.now();
+  if (now - lastRollingRefreshAt < ROLLING_REFRESH_THROTTLE_MS) return;
+  lastRollingRefreshAt = now;
+  try {
+    await supabase.auth.refreshSession();
+  } catch {
+    // sem rede / refresh token inválido — o fluxo normal trata; ignorar
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -122,6 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const cached = await loadCachedProfile(data.session.user.id);
           if (cached && active) setProfile(cached);
           registerForPush();
+          rollingRefresh(); // mantém o token fresco (em segundo plano, não bloqueia)
           // Perfil fresco em SEGUNDO PLANO — sem await, não atrasa o arranque.
           fetchProfile(data.session.user.id).then((fresh) => {
             if (fresh && active) {
@@ -236,7 +257,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const appStateSub = AppState.addEventListener('change', async (state) => {
       if (state !== 'active' || !active || recoveringRef.current) return;
       const { data } = await supabase.auth.getSession();
-      if (active && data.session && !profileRef.current) {
+      if (!active || !data.session) return;
+      rollingRefresh(); // a cada regresso a primeiro plano, mantém o token fresco
+      if (!profileRef.current) {
         const p = await fetchProfile(data.session.user.id);
         if (active && p) {
           setProfile(p);
