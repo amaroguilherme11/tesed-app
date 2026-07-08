@@ -1,5 +1,6 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { PatientHomeScreen } from '@/screens/patient/PatientHomeScreen';
+import { ConsultationsListScreen } from '@/screens/patient/ConsultationsListScreen';
 import { PatientChatScreen } from '@/screens/patient/PatientChatScreen';
 import { AddMemberScreen } from '@/screens/patient/AddMemberScreen';
 import { ConversationFilesScreen } from '@/screens/shared/ConversationFilesScreen';
@@ -31,9 +32,14 @@ export function PatientNavigator() {
         }}
       />
       <Stack.Screen
+        name="Consultations"
+        component={ConsultationsListScreen}
+        options={{ title: 'Consultas' }}
+      />
+      <Stack.Screen
         name="PatientChat"
         component={PatientChatScreen}
-        options={{ title: 'Conversa' }}
+        options={{ title: 'Consulta' }}
       />
       <Stack.Screen
         name="AddMember"

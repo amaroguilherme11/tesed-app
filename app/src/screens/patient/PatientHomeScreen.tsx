@@ -1,6 +1,7 @@
 import { useCallback, useLayoutEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Pressable,
   StyleSheet,
@@ -9,102 +10,104 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '@/contexts/AuthContext';
-import { getOrCreateMyConversation } from '@/lib/conversations';
 import { getMySubscription } from '@/lib/subscriptions';
 import { getMyMemberProfiles, removeMemberProfile } from '@/lib/family';
-import { getMyPatientChats, markConversationRead, PatientChat } from '@/lib/patientChats';
+import {
+  Consultation,
+  createConsultation,
+  getMyConsultations,
+} from '@/lib/consultations';
+import {
+  ConsultationsList,
+  LOCK_NO_SUBSCRIPTION,
+  CONSULTA_CLOSED,
+} from '@/components/ConsultationsList';
+import { markConversationRead } from '@/lib/patientChats';
 import { confirmAction } from '@/lib/confirm';
 import { formatAge } from '@/lib/age';
-import { ChatView } from '@/components/ChatView';
-import { HeaderFilesButton } from '@/components/HeaderFilesButton';
 import { HeaderTextButton } from '@/components/HeaderTextButton';
 import { HeaderSignOutButton } from '@/components/HeaderSignOutButton';
 import { MemberProfile, MySubscription } from '@/lib/types';
 import { colors, spacing, fontSize, radius, shadow } from '@/theme';
 
-const LOCK_MESSAGE =
-  'Precisas de uma subscrição ativa para enviar mensagens e ficheiros. Toca em "Gestão" para inserir um código.';
 const FAMILY_MAX = 6;
 
-type ChatItem = {
-  conversationId: string;
+type MemberRow = {
+  memberId: string | null; // null = titular
   label: string;
   dob: string | null;
   isPersonal: boolean;
-  memberId?: string;
 };
 
 export function PatientHomeScreen({ navigation }: any) {
   const { session, profile } = useAuth();
-  const [personalConvId, setPersonalConvId] = useState<string | null>(null);
   const [sub, setSub] = useState<MySubscription | null>(null);
   const [members, setMembers] = useState<MemberProfile[]>([]);
-  const [chats, setChats] = useState<PatientChat[]>([]);
+  const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
     if (!session) return;
     try {
-      const conv = await getOrCreateMyConversation(session.user.id);
-      setPersonalConvId(conv.id);
-      const s = await getMySubscription();
+      const [s, cons] = await Promise.all([getMySubscription(), getMyConsultations()]);
       setSub(s);
-      if (s?.plan_type === 'family') {
-        setMembers(await getMyMemberProfiles());
-      } else {
-        setMembers([]);
-      }
-      // Estado de leitura (resposta nova do médico) de todas as conversas.
-      setChats(await getMyPatientChats());
+      setConsultations(cons);
+      setMembers(s?.plan_type === 'family' ? await getMyMemberProfiles() : []);
     } catch (e: any) {
-      setError(e.message ?? 'Erro a abrir a conversa.');
+      setError(e.message ?? 'Erro a carregar as consultas.');
     } finally {
       setLoading(false);
     }
   }, [session]);
 
-  // Mapa conversationId -> tem resposta nova por ler.
-  const unreadById = new Map(chats.map((c) => [c.conversation_id, c.has_unread]));
-
   useFocusEffect(
     useCallback(() => {
       reload();
-    }, [reload])
+    }, [reload]),
   );
 
   const isActive = !!sub && sub.is_active;
   const isFamily = sub?.plan_type === 'family';
-
-  // No plano individual o paciente entra direto no chat — marca como lido ao focar.
-  useFocusEffect(
-    useCallback(() => {
-      if (personalConvId && sub?.plan_type !== 'family') {
-        markConversationRead(personalConvId);
-      }
-    }, [personalConvId, sub?.plan_type])
-  );
 
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
         <View style={styles.headerRow}>
           <HeaderTextButton label="Gestão" onPress={() => navigation.navigate('Subscription')} />
-          {!isFamily && personalConvId && (
-            <HeaderFilesButton
-              onPress={() =>
-                navigation.navigate('PatientFiles', {
-                  conversationId: personalConvId,
-                  title: 'Os meus ficheiros',
-                })
-              }
-            />
-          )}
           <HeaderSignOutButton />
         </View>
       ),
     });
-  }, [navigation, personalConvId, isFamily]);
+  }, [navigation]);
+
+  // Abre uma consulta (do titular, no plano individual) no chat.
+  const openMine = (c: Consultation) => {
+    if (c.is_open) markConversationRead(c.conversation_id);
+    navigation.navigate('PatientChat', {
+      conversationId: c.conversation_id,
+      title: 'A minha consulta',
+      lockedReason: c.is_open ? (isActive ? null : LOCK_NO_SUBSCRIPTION) : CONSULTA_CLOSED,
+    });
+  };
+
+  const newMine = async () => {
+    setCreating(true);
+    try {
+      const id = await createConsultation(null);
+      await reload();
+      navigation.navigate('PatientChat', {
+        conversationId: id,
+        title: 'A minha consulta',
+        lockedReason: null,
+      });
+    } catch (e: any) {
+      Alert.alert('Não foi possível abrir', e.message ?? 'Erro desconhecido.');
+    } finally {
+      setCreating(false);
+    }
+  };
 
   if (error) {
     return (
@@ -113,8 +116,7 @@ export function PatientHomeScreen({ navigation }: any) {
       </View>
     );
   }
-
-  if (loading || !personalConvId) {
+  if (loading) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color={colors.primary} />
@@ -122,47 +124,44 @@ export function PatientHomeScreen({ navigation }: any) {
     );
   }
 
-  // ---- Plano família ativo: lista de chats (Eu + dependentes) ----
-  if (isFamily && isActive) {
-    const chats: ChatItem[] = [
+  // ---- PLANO FAMÍLIA: seletor de membros → consultas de cada um ----
+  if (isFamily) {
+    const rows: MemberRow[] = [
       {
-        conversationId: personalConvId,
+        memberId: null,
         label: profile?.full_name || 'Eu',
         dob: profile?.date_of_birth ?? null,
         isPersonal: true,
       },
-      ...members
-        .filter((m) => m.conversation_id)
-        .map((m) => ({
-          conversationId: m.conversation_id as string,
-          label: m.full_name,
-          dob: m.date_of_birth,
-          isPersonal: false,
-          memberId: m.id,
-        })),
+      ...members.map((m) => ({
+        memberId: m.id,
+        label: m.full_name,
+        dob: m.date_of_birth,
+        isPersonal: false,
+      })),
     ];
-    const total = chats.length; // titular + dependentes
+    const total = rows.length;
     const canAdd = total < FAMILY_MAX;
 
-    const openChat = (c: ChatItem) => {
-      markConversationRead(c.conversationId); // já viu a resposta
-      navigation.navigate('PatientChat', {
-        conversationId: c.conversationId,
-        title: c.isPersonal ? `${c.label} (eu)` : c.label,
-        lockedReason: null,
-      });
-    };
+    const hasUnread = (memberId: string | null) =>
+      consultations.some((c) => c.member_id === memberId && c.is_open && c.has_unread);
 
-    const onRemove = (c: ChatItem) => {
-      if (!c.memberId) return;
+    const openMember = (r: MemberRow) =>
+      navigation.navigate('Consultations', {
+        memberId: r.memberId,
+        title: r.isPersonal ? `${r.label} (eu)` : r.label,
+      });
+
+    const onRemove = (r: MemberRow) => {
+      if (!r.memberId) return;
       confirmAction({
         title: 'Remover membro',
-        message: `Remover ${c.label} e o seu chat? Esta ação não pode ser anulada.`,
+        message: `Remover ${r.label} e as suas consultas? Esta ação não pode ser anulada.`,
         confirmLabel: 'Remover',
         destructive: true,
         onConfirm: async () => {
           try {
-            await removeMemberProfile(c.memberId!);
+            await removeMemberProfile(r.memberId!);
             await reload();
           } catch (e: any) {
             setError(e.message ?? 'Não foi possível remover.');
@@ -174,16 +173,16 @@ export function PatientHomeScreen({ navigation }: any) {
     return (
       <View style={styles.container}>
         <Text style={styles.familyTitle}>Família ({total}/{FAMILY_MAX})</Text>
-        <Text style={styles.familyHint}>Escolhe de quem é o caso para falar com o terapeuta.</Text>
+        <Text style={styles.familyHint}>Escolhe de quem são as consultas.</Text>
         <FlatList
-          data={chats}
-          keyExtractor={(c) => c.conversationId}
+          data={rows}
+          keyExtractor={(r) => r.memberId ?? 'self'}
           renderItem={({ item }) => {
             const age = formatAge(item.dob);
-            const unread = unreadById.get(item.conversationId) === true;
+            const unread = hasUnread(item.memberId);
             return (
               <Pressable
-                onPress={() => openChat(item)}
+                onPress={() => openMember(item)}
                 style={({ pressed }) => [styles.chatRow, pressed && styles.rowPressed]}
               >
                 {unread && <View style={styles.unreadDot} />}
@@ -221,10 +220,16 @@ export function PatientHomeScreen({ navigation }: any) {
     );
   }
 
-  // ---- Plano individual (ou sem subscrição): chat pessoal direto ----
-  // Entra direto no chat: a conversa é marcada como lida (efeito acima, no foco).
+  // ---- PLANO INDIVIDUAL (ou sem subscrição): consultas do titular ----
+  const mine = consultations.filter((c) => c.member_id === null);
   return (
-    <ChatView conversationId={personalConvId} lockedReason={isActive ? null : LOCK_MESSAGE} />
+    <ConsultationsList
+      consultations={mine}
+      isActive={isActive}
+      creating={creating}
+      onOpen={openMine}
+      onNew={newMine}
+    />
   );
 }
 
@@ -247,13 +252,7 @@ const styles = StyleSheet.create({
     ...shadow.card,
   },
   rowPressed: { opacity: 0.85 },
-  unreadDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: colors.unanswered,
-    marginRight: spacing.sm,
-  },
+  unreadDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.unanswered, marginRight: spacing.sm },
   unreadText: { fontSize: fontSize.sm, color: colors.unanswered, fontWeight: '600', marginTop: 2 },
   chatName: { fontSize: fontSize.base, fontWeight: '700', color: colors.text },
   tag: { fontWeight: '400', color: colors.primary, fontSize: fontSize.sm },
