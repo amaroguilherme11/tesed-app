@@ -119,6 +119,43 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------
+-- 5b) reopen_consultation: só o TERAPEUTA reabre uma consulta fechada (ex.:
+--    fecho por engano). Só se NÃO houver outra aberta desse (paciente, membro).
+-- ---------------------------------------------------------------------
+create or replace function public.reopen_consultation(p_conversation_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_conv public.conversations;
+begin
+  if not public.is_doctor() then
+    raise exception 'Apenas o terapeuta pode reabrir consultas.';
+  end if;
+  select * into v_conv from public.conversations where id = p_conversation_id;
+  if v_conv.id is null then
+    raise exception 'Consulta não encontrada.';
+  end if;
+  if v_conv.closed_at is null then
+    return; -- já está aberta
+  end if;
+  -- Respeita "uma aberta de cada vez" por (paciente, membro).
+  if exists (
+    select 1 from public.conversations c
+    where c.patient_id = v_conv.patient_id
+      and coalesce(c.member_id, '00000000-0000-0000-0000-000000000000'::uuid)
+          = coalesce(v_conv.member_id, '00000000-0000-0000-0000-000000000000'::uuid)
+      and c.closed_at is null
+  ) then
+    raise exception 'Já existe uma consulta aberta para este paciente/membro. Fecha-a primeiro.';
+  end if;
+  update public.conversations set closed_at = null where id = p_conversation_id;
+end;
+$$;
+
+-- ---------------------------------------------------------------------
 -- 6) my_consultations: consultas do paciente (próprias + dependentes), com
 --    estado. Abertas primeiro; depois por data descendente.
 -- ---------------------------------------------------------------------
