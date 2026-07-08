@@ -2,9 +2,22 @@ import { Pressable, Text, StyleSheet } from 'react-native';
 import { colors, fontSize } from '@/theme';
 
 /** Botão de texto para o cabeçalho — bolha clara com texto cinza-escuro. */
-export function HeaderTextButton({ label, onPress }: { label: string; onPress: () => void }) {
+export function HeaderTextButton({
+  label,
+  onPress,
+  disabled = false,
+}: {
+  label: string;
+  onPress: () => void;
+  disabled?: boolean;
+}) {
   return (
-    <Pressable onPress={onPress} hitSlop={10} style={({ pressed }) => [styles.btn, pressed && styles.pressed]}>
+    <Pressable
+      onPress={disabled ? undefined : onPress}
+      disabled={disabled}
+      hitSlop={10}
+      style={({ pressed }) => [styles.btn, (pressed || disabled) && styles.pressed]}
+    >
       <Text style={styles.text}>{label}</Text>
     </Pressable>
   );

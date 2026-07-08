@@ -1,8 +1,8 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { View } from 'react-native';
-import { DoctorInboxScreen } from '@/screens/doctor/DoctorInboxScreen';
+import { DoctorPatientsScreen } from '@/screens/doctor/DoctorPatientsScreen';
+import { DoctorConsultationsScreen } from '@/screens/doctor/DoctorConsultationsScreen';
 import { DoctorConversationScreen } from '@/screens/doctor/DoctorConversationScreen';
-import { DoctorFamilyChatsScreen } from '@/screens/doctor/DoctorFamilyChatsScreen';
 import { ConversationFilesScreen } from '@/screens/shared/ConversationFilesScreen';
 import { CodesScreen } from '@/screens/doctor/CodesScreen';
 import { DashboardScreen } from '@/screens/doctor/DashboardScreen';
@@ -17,17 +17,19 @@ const Stack = createNativeStackNavigator();
 export function DoctorNavigator() {
   return (
     <Stack.Navigator
+      initialRouteName="DoctorPatients"
       screenOptions={{
         headerStyle: { backgroundColor: colors.primary },
         headerTintColor: colors.white,
         contentStyle: { backgroundColor: colors.bg },
+        headerBackTitle: 'Voltar',
       }}
     >
       <Stack.Screen
-        name="DoctorInbox"
-        component={DoctorInboxScreen}
+        name="DoctorPatients"
+        component={DoctorPatientsScreen}
         options={({ navigation }: any) => ({
-          headerTitle: () => <HeaderLogoTitle title="Conversas" />,
+          headerTitle: () => <HeaderLogoTitle title="Pacientes" />,
           headerRight: () => (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
               <HeaderTextButton label="Painel" onPress={() => navigation.navigate('Dashboard')} />
@@ -38,14 +40,14 @@ export function DoctorNavigator() {
         })}
       />
       <Stack.Screen
-        name="FamilyChats"
-        component={DoctorFamilyChatsScreen}
-        options={{ title: 'Família' }}
+        name="DoctorConsultations"
+        component={DoctorConsultationsScreen}
+        options={{ title: 'Consultas' }}
       />
       <Stack.Screen
         name="Conversation"
         component={DoctorConversationScreen}
-        options={{ title: 'Conversa' }}
+        options={{ title: 'Consulta' }}
       />
       <Stack.Screen
         name="ConversationFiles"
