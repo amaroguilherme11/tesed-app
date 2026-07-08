@@ -10,6 +10,33 @@ foram simplificados/desligados durante o desenvolvimento e têm de ser repostos.
 > teve subscrição (migração 0019), separadores de data e copiar código. Os itens
 > abaixo ficam para a **próxima atualização** ou para confirmar.
 
+## 🩺 Consultas + aviso de atualização (v1.1.0) — código pronto, a publicar
+
+**Consultas:** as conversas passam a ser **consultas** com ciclo de vida (abertas
+até o terapeuta fechar; fechadas = só leitura; paciente cria novas se não houver
+aberta; terapeuta vê pacientes → consultas e pode fechar/reabrir).
+
+**Aviso de atualização (mobile):** no arranque, a app compara a versão instalada
+com `min_app_version` (Supabase). Se for inferior, mostra um ecrã a bloquear com
+botão para a loja. Controla-se **sem rebuild**: sobe `min_app_version` no
+`app_config` quando quiseres **forçar** um update (⚠️ só depois de a versão nova
+estar mesmo publicada nas lojas, senão trancas quem não tem como atualizar).
+
+Código todo commitado (migrações **0020** + **0021** + ecrãs). **Sequência de
+publicação (por esta ordem):**
+
+- [ ] **1. Aplicar as migrações `0020` e `0021`** no Supabase (SQL Editor: colar
+      cada ficheiro e correr). São **aditivas e retrocompatíveis** — a 1.0.x
+      publicada continua a funcionar; as conversas atuais tornam-se a 1.ª consulta
+      **aberta**; `min_app_version` fica em `1.0.0` (ninguém bloqueado).
+- [ ] **2. Build 1.1.0** (iOS + Android) via EAS + re-export web.
+- [ ] **3. Testar** no TestFlight/interno e na web (logado): criar consulta (só com
+      subscrição e sem outra aberta), consulta fechada só-leitura, família por
+      membro, terapeuta fecha/reabre, por-responder no topo.
+- [ ] **4. Publicar** nas 3 plataformas (App Store precisa de versão > 1.0.4 → 1.1.0).
+- [ ] **5. (Opcional) Forçar update:** depois de a 1.1.0 estar live, subir
+      `min_app_version` para `1.1.0` no `app_config` se quiseres obrigar todos a atualizar.
+
 ## 🔒 Segurança / Auth
 - [ ] **Reativar confirmação de email no registo.** Foi desligada para testes.
       Painel: **Authentication → Providers → Email → "Confirm email" = ON**.

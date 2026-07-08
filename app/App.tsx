@@ -13,6 +13,7 @@ import {
 } from '@expo-google-fonts/quicksand';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { RootNavigator } from '@/navigation/RootNavigator';
+import { UpdateGate } from '@/components/UpdateGate';
 import { applyBrandFont } from '@/theme/applyFont';
 
 // Mantém o splash visível até as fontes da marca carregarem (nativo).
@@ -51,7 +52,9 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <RootNavigator />
+        <UpdateGate>
+          <RootNavigator />
+        </UpdateGate>
         <StatusBar style="dark" />
       </AuthProvider>
     </SafeAreaProvider>
