@@ -1,5 +1,5 @@
-import { useCallback, useLayoutEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useLayoutEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { DoctorConsultation, getDoctorPatientConsultations } from '@/lib/consultations';
 import { formatAge } from '@/lib/age';
@@ -20,9 +20,12 @@ function fmtDate(iso: string): string {
   return `${dd}/${mm}/${d.getFullYear()}`;
 }
 
+type Section = { title: string; dob: string | null; data: DoctorConsultation[] };
+
 /**
- * Consultas de um paciente (todos os dependentes), para o terapeuta.
- * route.params = { patientId, patientName, patientPhone? }. Abertas no topo.
+ * Consultas de um paciente para o terapeuta, AGRUPADAS por membro (titular
+ * primeiro), abertas no topo de cada membro; as fechadas ficam esbatidas.
+ * route.params = { patientId, patientName, patientPhone? }
  */
 export function DoctorConsultationsScreen({ route, navigation }: any) {
   const { patientId, patientName, patientPhone } = route.params;
@@ -44,6 +47,22 @@ export function DoctorConsultationsScreen({ route, navigation }: any) {
     navigation.setOptions({ title: patientName ?? 'Paciente' });
   }, [navigation, patientName]);
 
+  // Agrupa por membro (null = titular). O titular vem primeiro; dentro de cada
+  // membro mantém-se a ordem da RPC (abertas antes das fechadas).
+  const sections = useMemo<Section[]>(() => {
+    const map = new Map<string, Section>();
+    for (const c of items) {
+      const key = c.member_id ?? '__titular__';
+      if (!map.has(key)) {
+        map.set(key, { title: c.member_name ?? patientName ?? 'Paciente', dob: c.member_dob, data: [] });
+      }
+      map.get(key)!.data.push(c);
+    }
+    const titular = map.get('__titular__');
+    const rest = [...map.entries()].filter(([k]) => k !== '__titular__').map(([, v]) => v);
+    return [...(titular ? [titular] : []), ...rest];
+  }, [items, patientName]);
+
   const open = (c: DoctorConsultation) =>
     navigation.navigate('Conversation', {
       conversationId: c.conversation_id,
@@ -61,29 +80,39 @@ export function DoctorConsultationsScreen({ route, navigation }: any) {
   }
 
   return (
-    <FlatList
-      data={items}
+    <SectionList
+      sections={sections}
       keyExtractor={(c) => c.conversation_id}
+      stickySectionHeadersEnabled={false}
+      renderSectionHeader={({ section }) => {
+        const age = formatAge((section as Section).dob);
+        return (
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>
+              {(section as Section).title}
+              {age ? <Text style={styles.sectionAge}>{`  ·  ${age}`}</Text> : null}
+            </Text>
+          </View>
+        );
+      }}
       renderItem={({ item }) => {
-        const who = item.member_name ?? patientName;
-        const age = formatAge(item.member_dob);
         const unanswered = item.is_open && item.status === 'unanswered';
         return (
           <Pressable
             onPress={() => open(item)}
-            style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
+            style={({ pressed }) => [
+              styles.row,
+              !item.is_open && styles.rowClosed,
+              pressed && styles.rowPressed,
+            ]}
           >
             <View style={styles.rowMain}>
               <View style={styles.nameRow}>
                 {item.has_unread && <View style={styles.unreadDot} />}
-                <Text style={styles.name} numberOfLines={1}>
-                  {who}
-                  {age ? <Text style={styles.age}>{`  ·  ${age}`}</Text> : null}
-                </Text>
+                <Text style={styles.date}>Consulta de {fmtDate(item.created_at)}</Text>
               </View>
               <Text style={styles.time}>{relativeTime(item.last_message_at)}</Text>
             </View>
-            <Text style={styles.sub}>Consulta de {fmtDate(item.created_at)}</Text>
             {item.is_open ? (
               unanswered ? (
                 <View style={styles.badge}>
@@ -106,7 +135,14 @@ export function DoctorConsultationsScreen({ route, navigation }: any) {
 
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
-  listContent: { padding: spacing.md },
+  listContent: { padding: spacing.md, paddingTop: spacing.sm },
+  sectionHeader: {
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xs,
+    paddingHorizontal: spacing.xs,
+  },
+  sectionTitle: { fontSize: fontSize.base, fontWeight: '800', color: colors.text },
+  sectionAge: { fontWeight: '400', color: colors.textMuted, fontSize: fontSize.sm },
   row: {
     backgroundColor: colors.surface,
     borderRadius: radius.base,
@@ -114,14 +150,13 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
     ...shadow.card,
   },
+  rowClosed: { opacity: 0.5 },
   rowPressed: { opacity: 0.85 },
   rowMain: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   nameRow: { flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: spacing.sm },
   unreadDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: colors.primary, marginRight: spacing.sm },
-  name: { fontSize: fontSize.base, fontWeight: '700', color: colors.text, flex: 1 },
-  age: { fontWeight: '400', color: colors.textMuted, fontSize: fontSize.sm },
+  date: { fontSize: fontSize.base, fontWeight: '700', color: colors.text, flex: 1 },
   time: { fontSize: fontSize.sm, color: colors.textMuted },
-  sub: { fontSize: fontSize.sm, color: colors.textMuted, marginTop: 2 },
   badge: {
     alignSelf: 'flex-start',
     backgroundColor: colors.unanswered,

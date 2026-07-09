@@ -73,9 +73,11 @@ export function DoctorPatientsScreen({ navigation }: any) {
                   : ' · sem consultas abertas'}
                 {item.sub_active ? '' : ' · subscrição inativa'}
               </Text>
-              {item.needs_response ? (
+              {item.unanswered_count > 0 ? (
                 <View style={styles.badge}>
-                  <Text style={styles.badgeText}>POR RESPONDER</Text>
+                  <Text style={styles.badgeText}>
+                    {item.unanswered_count} POR RESPONDER
+                  </Text>
                 </View>
               ) : null}
             </Pressable>

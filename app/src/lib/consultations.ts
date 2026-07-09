@@ -35,6 +35,7 @@ export type DoctorPatientOverview = {
   plan_type: 'individual' | 'family' | null;
   sub_active: boolean;
   open_count: number;
+  unanswered_count: number;
   needs_response: boolean;
   has_unread: boolean;
 };
