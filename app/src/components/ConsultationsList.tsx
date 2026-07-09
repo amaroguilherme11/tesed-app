@@ -59,7 +59,11 @@ export function ConsultationsList({
           return (
             <Pressable
               onPress={() => onOpen(item)}
-              style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
+              style={({ pressed }) => [
+                styles.row,
+                !item.is_open && styles.rowClosed,
+                pressed && styles.rowPressed,
+              ]}
             >
               {unread && <View style={styles.unreadDot} />}
               <View style={styles.flex}>
@@ -107,6 +111,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
     ...shadow.card,
   },
+  rowClosed: { opacity: 0.5 },
   rowPressed: { opacity: 0.85 },
   unreadDot: {
     width: 10,
