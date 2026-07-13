@@ -198,11 +198,6 @@ export const pt = {
   dates: {
     today: 'Hoje',
     yesterday: 'Ontem',
-    months: [
-      'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
-      'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
-    ],
-    longDate: (day: number, month: string, year: number) => `${day} de ${month} de ${year}`,
   },
 };
 
@@ -295,7 +290,7 @@ export const en: typeof pt = {
     US: 'USA / Canada',
   },
   home: {
-    manage: 'Manage',
+    manage: 'Account',
     myConsultation: 'My consultation',
     loadError: 'Could not load consultations.',
     couldNotOpenTitle: 'Could not open',
@@ -315,7 +310,7 @@ export const en: typeof pt = {
     hasOpenHint: 'You have an open consultation — tap it to continue.',
     newConsultation: 'New consultation',
     needSubscriptionHint:
-      'You need an active subscription to open a consultation. Tap "Manage".',
+      'You need an active subscription to open a consultation. Tap "Account".',
     consultationOf: (date) => `Consultation of ${date}`,
     openNewReply: 'Open · new reply from the therapist',
     open: 'Open',
@@ -323,7 +318,7 @@ export const en: typeof pt = {
     emptyNone: "You don't have any consultations yet.",
     emptyStartHint: ' Start your first one with "New consultation".',
     lockNoSubscription:
-      'You need an active subscription to send messages. Tap "Manage" to enter a code.',
+      'You need an active subscription to send messages. Tap "Account" to enter a code.',
     closedReadOnlyMessage:
       "This consultation is closed. You can read the history, but you can't send messages.",
   },
@@ -392,10 +387,5 @@ export const en: typeof pt = {
   dates: {
     today: 'Today',
     yesterday: 'Yesterday',
-    months: [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December',
-    ],
-    longDate: (day, month, year) => `${month} ${day}, ${year}`,
   },
 };

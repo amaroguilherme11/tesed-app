@@ -17,7 +17,7 @@ export function isSameDay(a: string, b: string): boolean {
 
 /**
  * Etiqueta do separador de dia: "Hoje"/"Today", "Ontem"/"Yesterday" ou a data
- * por extenso ("12 de junho de 2026" / "June 12, 2026").
+ * em formato numérico DD/MM/AAAA (igual nos dois idiomas, sem ambiguidade).
  */
 export function formatDateSeparator(iso: string): string {
   const d = new Date(iso);
@@ -35,5 +35,7 @@ export function formatDateSeparator(iso: string): string {
 
   if (sameDay(d, today)) return dates.today;
   if (sameDay(d, yesterday)) return dates.yesterday;
-  return dates.longDate(d.getDate(), dates.months[d.getMonth()], d.getFullYear());
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  return `${dd}/${mm}/${d.getFullYear()}`;
 }
