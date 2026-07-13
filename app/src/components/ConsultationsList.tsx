@@ -1,12 +1,14 @@
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Button } from '@/components/Button';
 import { Consultation } from '@/lib/consultations';
+import { useI18n } from '@/i18n';
 import { colors, fontSize, radius, shadow, spacing } from '@/theme';
 
-/** Mensagem de bloqueio: sem subscrição ativa (não pode enviar/abrir). */
-export const LOCK_NO_SUBSCRIPTION =
-  'Precisas de uma subscrição ativa para enviar mensagens. Toca em "Gestão" para inserir um código.';
-/** Mensagem de bloqueio: consulta fechada (só leitura). */
+/**
+ * Mensagem de bloqueio (consulta fechada) em PT, para a vista do TERAPEUTA
+ * (DoctorConversationScreen), que não é traduzida. Os ecrãs do PACIENTE usam
+ * `t.consultations.closedReadOnlyMessage` / `t.consultations.lockNoSubscription`.
+ */
 export const CONSULTA_CLOSED =
   'Esta consulta está fechada. Podes ler o histórico, mas não podes enviar mensagens.';
 
@@ -35,19 +37,18 @@ export function ConsultationsList({
   onOpen: (c: Consultation) => void;
   onNew: () => void;
 }) {
+  const { t } = useI18n();
   const hasOpen = consultations.some((c) => c.is_open);
 
   return (
     <View style={styles.container}>
       <View style={styles.top}>
         {hasOpen ? (
-          <Text style={styles.hint}>Tens uma consulta aberta — toca nela para continuar.</Text>
+          <Text style={styles.hint}>{t.consultations.hasOpenHint}</Text>
         ) : isActive ? (
-          <Button title="Nova consulta" onPress={onNew} loading={creating} />
+          <Button title={t.consultations.newConsultation} onPress={onNew} loading={creating} />
         ) : (
-          <Text style={styles.hint}>
-            Precisas de uma subscrição ativa para abrir uma consulta. Toca em "Gestão".
-          </Text>
+          <Text style={styles.hint}>{t.consultations.needSubscriptionHint}</Text>
         )}
       </View>
 
@@ -67,13 +68,13 @@ export function ConsultationsList({
             >
               {unread && <View style={styles.unreadDot} />}
               <View style={styles.flex}>
-                <Text style={styles.title}>Consulta de {fmtDate(item.created_at)}</Text>
+                <Text style={styles.title}>{t.consultations.consultationOf(fmtDate(item.created_at))}</Text>
                 <Text style={[styles.meta, item.is_open ? styles.metaOpen : styles.metaClosed]}>
                   {item.is_open
                     ? unread
-                      ? 'Aberta · nova resposta do terapeuta'
-                      : 'Aberta'
-                    : 'Fechada · só leitura'}
+                      ? t.consultations.openNewReply
+                      : t.consultations.open
+                    : t.consultations.closedReadOnly}
                 </Text>
               </View>
             </Pressable>
@@ -82,7 +83,7 @@ export function ConsultationsList({
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <Text style={styles.empty}>
-            Ainda não tens consultas.{isActive ? ' Abre a primeira com "Nova consulta".' : ''}
+            {t.consultations.emptyNone}{isActive ? t.consultations.emptyStartHint : ''}
           </Text>
         }
       />

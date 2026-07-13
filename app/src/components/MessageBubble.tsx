@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Attachment } from '@/lib/types';
 import { getAttachmentUrl, openAttachment } from '@/lib/attachments';
+import { useI18n } from '@/i18n';
 import { colors, fontSize, radius, spacing } from '@/theme';
 
 type Props = {
@@ -33,6 +34,7 @@ function isImage(a: Attachment): boolean {
 
 /** Linha clicável de um anexo (ficheiro não-imagem): abre URL assinado ao tocar. */
 function AttachmentRow({ attachment, mine }: { attachment: Attachment; mine: boolean }) {
+  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
 
   const open = async () => {
@@ -51,7 +53,7 @@ function AttachmentRow({ attachment, mine }: { attachment: Attachment; mine: boo
           {attachment.file_name}
         </Text>
         <Text style={[styles.attachMeta, mine && styles.timeMine]}>
-          {formatSize(attachment.size_bytes)} · tocar para abrir
+          {formatSize(attachment.size_bytes)} · {t.chat.tapToOpen}
         </Text>
       </View>
       {loading && <ActivityIndicator size="small" color={mine ? colors.white : colors.primary} />}

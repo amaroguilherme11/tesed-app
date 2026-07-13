@@ -12,6 +12,16 @@ export type Language = 'pt' | 'en';
 const DICTS = { pt, en };
 const STORAGE_KEY = 'tesed.lang';
 
+// Idioma atual guardado ao nível do módulo, sincronizado pelo LanguageProvider.
+// Permite que FUNÇÕES PURAS (não-componentes: datas, idades, confirmações, erros
+// de anexos) obtenham as strings certas via getStrings(), sem serem hooks.
+let currentLang: Language = 'pt';
+
+/** Dicionário do idioma atual, para uso FORA de componentes React. */
+export function getStrings() {
+  return DICTS[currentLang];
+}
+
 type I18nValue = {
   lang: Language;
   setLang: (l: Language) => void;
@@ -34,12 +44,16 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY)
       .then((v) => {
-        if (v === 'pt' || v === 'en') setLangState(v);
+        if (v === 'pt' || v === 'en') {
+          currentLang = v; // sincroniza já (síncrono) para os helpers puros
+          setLangState(v);
+        }
       })
       .catch(() => {});
   }, []);
 
   const setLang = (l: Language) => {
+    currentLang = l; // sincroniza ANTES do re-render (helpers puros ficam certos)
     setLangState(l);
     AsyncStorage.setItem(STORAGE_KEY, l).catch(() => {});
   };

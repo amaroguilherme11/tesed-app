@@ -1,11 +1,8 @@
 /**
  * Utilitários de data para o chat — separadores por dia (estilo WhatsApp).
+ * As etiquetas são sensíveis ao idioma (getStrings().dates).
  */
-
-const MONTHS_PT = [
-  'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
-  'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
-];
+import { getStrings } from '@/i18n';
 
 /** True se as duas datas ISO caem no mesmo dia civil (local). */
 export function isSameDay(a: string, b: string): boolean {
@@ -19,11 +16,13 @@ export function isSameDay(a: string, b: string): boolean {
 }
 
 /**
- * Etiqueta do separador de dia: "Hoje", "Ontem" ou "12 de junho de 2026".
+ * Etiqueta do separador de dia: "Hoje"/"Today", "Ontem"/"Yesterday" ou a data
+ * por extenso ("12 de junho de 2026" / "June 12, 2026").
  */
 export function formatDateSeparator(iso: string): string {
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '';
+  const dates = getStrings().dates;
 
   const today = new Date();
   const yesterday = new Date();
@@ -34,7 +33,7 @@ export function formatDateSeparator(iso: string): string {
     x.getMonth() === y.getMonth() &&
     x.getDate() === y.getDate();
 
-  if (sameDay(d, today)) return 'Hoje';
-  if (sameDay(d, yesterday)) return 'Ontem';
-  return `${d.getDate()} de ${MONTHS_PT[d.getMonth()]} de ${d.getFullYear()}`;
+  if (sameDay(d, today)) return dates.today;
+  if (sameDay(d, yesterday)) return dates.yesterday;
+  return dates.longDate(d.getDate(), dates.months[d.getMonth()], d.getFullYear());
 }

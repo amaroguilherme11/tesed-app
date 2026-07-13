@@ -3,6 +3,7 @@ import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from '
 import { useAuth } from '@/contexts/AuthContext';
 import { useConversationFiles, FileItem } from '@/hooks/useConversationFiles';
 import { openAttachment } from '@/lib/attachments';
+import { useI18n } from '@/i18n';
 import { colors, fontSize, radius, shadow, spacing } from '@/theme';
 
 /**
@@ -13,6 +14,7 @@ import { colors, fontSize, radius, shadow, spacing } from '@/theme';
 export function ConversationFilesScreen({ route }: any) {
   const { conversationId } = route.params;
   const { session } = useAuth();
+  const { t } = useI18n();
   const uid = session?.user.id ?? '';
   const { files, loading } = useConversationFiles(conversationId);
 
@@ -31,9 +33,7 @@ export function ConversationFilesScreen({ route }: any) {
         keyExtractor={(f) => f.id}
         renderItem={({ item }) => <FileRow item={item} mine={item.message?.sender_id === uid} />}
         contentContainerStyle={styles.listContent}
-        ListEmptyComponent={
-          <Text style={styles.empty}>Ainda não foram trocados ficheiros nesta conversa.</Text>
-        }
+        ListEmptyComponent={<Text style={styles.empty}>{t.files.empty}</Text>}
       />
     </View>
   );
@@ -56,6 +56,7 @@ function formatDate(iso: string): string {
 }
 
 function FileRow({ item, mine }: { item: FileItem; mine: boolean }) {
+  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
   const open = async () => {
     setLoading(true);
@@ -72,7 +73,7 @@ function FileRow({ item, mine }: { item: FileItem; mine: boolean }) {
           {item.file_name}
         </Text>
         <Text style={styles.meta}>
-          {mine ? 'Enviado por mim' : 'Recebido'} · {formatSize(item.size_bytes)} ·{' '}
+          {mine ? t.files.sentByMe : t.files.received} · {formatSize(item.size_bytes)} ·{' '}
           {formatDate(item.created_at)}
         </Text>
       </View>

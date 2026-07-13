@@ -3,6 +3,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { ChatView } from '@/components/ChatView';
 import { HeaderFilesButton } from '@/components/HeaderFilesButton';
 import { markConversationRead } from '@/lib/patientChats';
+import { useI18n } from '@/i18n';
 
 /**
  * Conversa de um membro específico (ou do próprio titular), aberta a partir da
@@ -10,6 +11,7 @@ import { markConversationRead } from '@/lib/patientChats';
  */
 export function PatientChatScreen({ route, navigation }: any) {
   const { conversationId, title, lockedReason } = route.params;
+  const { t } = useI18n();
 
   // Marca como lida enquanto o chat está em foco (resposta nova deixa de contar).
   useFocusEffect(
@@ -20,19 +22,19 @@ export function PatientChatScreen({ route, navigation }: any) {
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      title: title ?? 'Conversa',
+      title: title ?? t.chatScreen.conversation,
       headerRight: () => (
         <HeaderFilesButton
           onPress={() =>
             navigation.navigate('PatientFiles', {
               conversationId,
-              title: `Ficheiros — ${title ?? ''}`.trim(),
+              title: t.chatScreen.filesPrefix(title ?? '').trim(),
             })
           }
         />
       ),
     });
-  }, [navigation, conversationId, title]);
+  }, [navigation, conversationId, title, t]);
 
   return <ChatView conversationId={conversationId} lockedReason={lockedReason ?? null} />;
 }

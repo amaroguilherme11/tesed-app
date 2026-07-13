@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { useChat } from '@/hooks/useChat';
 import { useAuth } from '@/contexts/AuthContext';
+import { useI18n } from '@/i18n';
 import { MessageBubble } from '@/components/MessageBubble';
 import { pickFiles, pickImages, takePhoto, sendAttachment, PickedFile } from '@/lib/attachments';
 import { formatDateSeparator, isSameDay } from '@/lib/date';
@@ -53,6 +54,7 @@ export function ChatView({
   extraKeyboardOffset?: number;
 }) {
   const { session } = useAuth();
+  const { t } = useI18n();
   const uid = session?.user.id ?? '';
   const { messages, loading, send, appendMessage } = useChat(conversationId);
   const [text, setText] = useState('');
@@ -114,7 +116,7 @@ export function ChatView({
         appendMessage(message); // eco otimista (o Realtime faz dedupe por id)
       }
     } catch (e: any) {
-      Alert.alert('Não foi possível enviar', e.message ?? 'Erro desconhecido.');
+      Alert.alert(t.chat.couldNotSendTitle, e.message ?? t.common.unknownError);
       if (caption) setText(caption); // repõe a legenda se falhar
     } finally {
       setUploading(false);
@@ -131,7 +133,7 @@ export function ChatView({
       files = await picker();
     } catch (e: any) {
       // Tipicamente permissão recusada — mostra a mensagem amigável do attachments.ts.
-      Alert.alert('Sem acesso', e.message ?? 'Não foi possível abrir.');
+      Alert.alert(t.chat.noAccessTitle, e.message ?? t.chat.couldNotOpen);
       return;
     }
     await sendFiles(files);
@@ -164,7 +166,7 @@ export function ChatView({
       {messages.length === 0 ? (
         // Estado vazio à parte (a lista invertida viraria o texto ao contrário).
         <View style={styles.emptyWrap}>
-          <Text style={styles.empty}>Ainda não há mensagens. Escreve a primeira.</Text>
+          <Text style={styles.empty}>{t.chat.emptyFirst}</Text>
         </View>
       ) : (
         <FlatList
@@ -200,7 +202,7 @@ export function ChatView({
             onPress={openMenu}
             disabled={uploading}
             style={[styles.attachBtn, uploading && styles.sendBtnOff]}
-            accessibilityLabel="Anexar foto ou ficheiro"
+            accessibilityLabel={t.chat.attachLabel}
           >
             {uploading ? (
               <ActivityIndicator size="small" color={colors.primary} />
@@ -212,7 +214,7 @@ export function ChatView({
             style={styles.input}
             value={text}
             onChangeText={setText}
-            placeholder="Escrever mensagem…"
+            placeholder={t.chat.inputPlaceholder}
             placeholderTextColor={colors.textMuted}
             multiline
           />
@@ -221,7 +223,7 @@ export function ChatView({
             disabled={sending || !text.trim()}
             style={[styles.sendBtn, (sending || !text.trim()) && styles.sendBtnOff]}
           >
-            <Text style={styles.sendText}>Enviar</Text>
+            <Text style={styles.sendText}>{t.chat.send}</Text>
           </Pressable>
         </View>
       )}
@@ -233,17 +235,17 @@ export function ChatView({
           <View style={[styles.sheet, { paddingBottom: spacing.md + insets.bottom }]}>
             <Pressable style={styles.menuItem} onPress={() => runPicker(takePhoto)}>
               <Text style={styles.menuIcon}>📷</Text>
-              <Text style={styles.menuLabel}>Tirar foto</Text>
+              <Text style={styles.menuLabel}>{t.chat.takePhoto}</Text>
             </Pressable>
             <View style={styles.menuDivider} />
             <Pressable style={styles.menuItem} onPress={() => runPicker(pickImages)}>
               <Text style={styles.menuIcon}>🖼️</Text>
-              <Text style={styles.menuLabel}>Escolher fotos</Text>
+              <Text style={styles.menuLabel}>{t.chat.choosePhotos}</Text>
             </Pressable>
             <View style={styles.menuDivider} />
             <Pressable style={styles.menuItem} onPress={() => runPicker(pickFiles)}>
               <Text style={styles.menuIcon}>📎</Text>
-              <Text style={styles.menuLabel}>Enviar ficheiro</Text>
+              <Text style={styles.menuLabel}>{t.chat.sendFile}</Text>
             </Pressable>
           </View>
         </View>

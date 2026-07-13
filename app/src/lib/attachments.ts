@@ -4,6 +4,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { decode } from 'base64-arraybuffer';
 import { supabase } from '@/lib/supabase';
+import { getStrings } from '@/i18n';
 import { Attachment, Message } from '@/lib/types';
 
 const BUCKET = 'attachments';
@@ -73,7 +74,7 @@ function assetToPicked(a: ImagePicker.ImagePickerAsset, index: number): PickedFi
 export async function takePhoto(): Promise<PickedFile[]> {
   const perm = await ImagePicker.requestCameraPermissionsAsync();
   if (!perm.granted) {
-    throw new Error('Sem acesso à câmara. Ativa a permissão nas definições do telemóvel.');
+    throw new Error(getStrings().attachments.noCameraAccess);
   }
   const result = await ImagePicker.launchCameraAsync({
     mediaTypes: ['images'],
@@ -90,7 +91,7 @@ export async function takePhoto(): Promise<PickedFile[]> {
 export async function pickImages(): Promise<PickedFile[]> {
   const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (!perm.granted) {
-    throw new Error('Sem acesso às fotos. Ativa a permissão nas definições do telemóvel.');
+    throw new Error(getStrings().attachments.noPhotosAccess);
   }
   const result = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ['images'],

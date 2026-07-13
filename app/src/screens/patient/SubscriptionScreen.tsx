@@ -5,9 +5,11 @@ import { TextField } from '@/components/TextField';
 import { Button } from '@/components/Button';
 import { getMySubscription, redeemCode } from '@/lib/subscriptions';
 import { MySubscription } from '@/lib/types';
+import { useI18n } from '@/i18n';
 import { colors, fontSize, radius, shadow, spacing } from '@/theme';
 
 export function SubscriptionScreen() {
+  const { t } = useI18n();
   const [sub, setSub] = useState<MySubscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [code, setCode] = useState('');
@@ -31,10 +33,10 @@ export function SubscriptionScreen() {
     try {
       await redeemCode(code.trim());
       setCode('');
-      Alert.alert('Subscrição ativada', 'O teu código foi resgatado com sucesso.');
+      Alert.alert(t.subscription.activatedTitle, t.subscription.activatedMsg);
       await load();
     } catch (e: any) {
-      Alert.alert('Não foi possível resgatar', e.message ?? 'Erro desconhecido.');
+      Alert.alert(t.subscription.couldNotRedeemTitle, e.message ?? t.common.unknownError);
     } finally {
       setRedeeming(false);
     }
@@ -51,48 +53,42 @@ export function SubscriptionScreen() {
   return (
     <ScrollView style={styles.flex} contentContainerStyle={styles.content}>
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>A minha subscrição</Text>
+        <Text style={styles.cardTitle}>{t.subscription.mySubscription}</Text>
         {sub ? (
           <>
             <View style={[styles.badge, sub.is_active ? styles.badgeActive : styles.badgeExpired]}>
-              <Text style={styles.badgeText}>{sub.is_active ? 'ATIVA' : 'EXPIRADA'}</Text>
+              <Text style={styles.badgeText}>{sub.is_active ? t.subscription.active : t.subscription.expired}</Text>
             </View>
             <Text style={styles.row}>
-              Plano:{' '}
+              {t.subscription.plan}{' '}
               <Text style={styles.bold}>
-                {sub.plan_type === 'family' ? 'Família' : 'Individual'}
+                {sub.plan_type === 'family' ? t.subscription.family : t.subscription.individual}
               </Text>
             </Text>
             <Text style={styles.row}>
-              Validade: <Text style={styles.bold}>{formatDate(sub.expires_at)}</Text>
+              {t.subscription.validity} <Text style={styles.bold}>{formatDate(sub.expires_at)}</Text>
             </Text>
-            {sub.is_active && <Text style={styles.muted}>Faltam {sub.days_left} dias.</Text>}
+            {sub.is_active && <Text style={styles.muted}>{t.subscription.daysLeft(sub.days_left)}</Text>}
             {sub.plan_type === 'family' && sub.is_active && (
-              <Text style={styles.muted}>
-                Gere os membros da família no ecrã principal (lista de chats).
-              </Text>
+              <Text style={styles.muted}>{t.subscription.manageFamilyHint}</Text>
             )}
           </>
         ) : (
-          <Text style={styles.muted}>
-            Ainda não tens subscrição ativa. Insere um código para ativar.
-          </Text>
+          <Text style={styles.muted}>{t.subscription.noSubscription}</Text>
         )}
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Inserir código</Text>
-        <Text style={styles.muted}>
-          Recebeste um código em consulta ou na compra no website? Insere-o aqui.
-        </Text>
+        <Text style={styles.cardTitle}>{t.subscription.enterCode}</Text>
+        <Text style={styles.muted}>{t.subscription.enterCodeHint}</Text>
         <TextField
-          label="Código"
+          label={t.subscription.codeLabel}
           value={code}
-          onChangeText={(t) => setCode(t.toUpperCase())}
+          onChangeText={(v) => setCode(v.toUpperCase())}
           autoCapitalize="characters"
           placeholder="TESED-XXXX-XXXX"
         />
-        <Button title="Resgatar código" onPress={onRedeem} loading={redeeming} />
+        <Button title={t.subscription.redeem} onPress={onRedeem} loading={redeeming} />
       </View>
     </ScrollView>
   );

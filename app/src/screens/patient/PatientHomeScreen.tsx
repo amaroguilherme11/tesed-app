@@ -17,16 +17,14 @@ import {
   createConsultation,
   getMyConsultations,
 } from '@/lib/consultations';
-import {
-  ConsultationsList,
-  LOCK_NO_SUBSCRIPTION,
-  CONSULTA_CLOSED,
-} from '@/components/ConsultationsList';
+import { ConsultationsList } from '@/components/ConsultationsList';
 import { markConversationRead } from '@/lib/patientChats';
 import { confirmAction } from '@/lib/confirm';
 import { formatAge } from '@/lib/age';
+import { useI18n } from '@/i18n';
 import { HeaderTextButton } from '@/components/HeaderTextButton';
 import { HeaderSignOutButton } from '@/components/HeaderSignOutButton';
+import { LanguageToggle } from '@/components/LanguageToggle';
 import { MemberProfile, MySubscription } from '@/lib/types';
 import { colors, spacing, fontSize, radius, shadow } from '@/theme';
 
@@ -41,6 +39,7 @@ type MemberRow = {
 
 export function PatientHomeScreen({ navigation }: any) {
   const { session, profile } = useAuth();
+  const { t } = useI18n();
   const [sub, setSub] = useState<MySubscription | null>(null);
   const [members, setMembers] = useState<MemberProfile[]>([]);
   const [consultations, setConsultations] = useState<Consultation[]>([]);
@@ -56,11 +55,11 @@ export function PatientHomeScreen({ navigation }: any) {
       setConsultations(cons);
       setMembers(s?.plan_type === 'family' ? await getMyMemberProfiles() : []);
     } catch (e: any) {
-      setError(e.message ?? 'Erro a carregar as consultas.');
+      setError(e.message ?? t.home.loadError);
     } finally {
       setLoading(false);
     }
-  }, [session]);
+  }, [session, t]);
 
   useFocusEffect(
     useCallback(() => {
@@ -73,22 +72,27 @@ export function PatientHomeScreen({ navigation }: any) {
 
   useLayoutEffect(() => {
     navigation.setOptions({
+      headerLeft: () => <LanguageToggle tint={colors.white} />,
       headerRight: () => (
         <View style={styles.headerRow}>
-          <HeaderTextButton label="Gestão" onPress={() => navigation.navigate('Subscription')} />
+          <HeaderTextButton label={t.home.manage} onPress={() => navigation.navigate('Subscription')} />
           <HeaderSignOutButton />
         </View>
       ),
     });
-  }, [navigation]);
+  }, [navigation, t]);
 
   // Abre uma consulta (do titular, no plano individual) no chat.
   const openMine = (c: Consultation) => {
     if (c.is_open) markConversationRead(c.conversation_id);
     navigation.navigate('PatientChat', {
       conversationId: c.conversation_id,
-      title: 'A minha consulta',
-      lockedReason: c.is_open ? (isActive ? null : LOCK_NO_SUBSCRIPTION) : CONSULTA_CLOSED,
+      title: t.home.myConsultation,
+      lockedReason: c.is_open
+        ? isActive
+          ? null
+          : t.consultations.lockNoSubscription
+        : t.consultations.closedReadOnlyMessage,
     });
   };
 
@@ -99,11 +103,11 @@ export function PatientHomeScreen({ navigation }: any) {
       await reload();
       navigation.navigate('PatientChat', {
         conversationId: id,
-        title: 'A minha consulta',
+        title: t.home.myConsultation,
         lockedReason: null,
       });
     } catch (e: any) {
-      Alert.alert('Não foi possível abrir', e.message ?? 'Erro desconhecido.');
+      Alert.alert(t.home.couldNotOpenTitle, e.message ?? t.common.unknownError);
     } finally {
       setCreating(false);
     }
@@ -129,7 +133,7 @@ export function PatientHomeScreen({ navigation }: any) {
     const rows: MemberRow[] = [
       {
         memberId: null,
-        label: profile?.full_name || 'Eu',
+        label: profile?.full_name || t.home.me,
         dob: profile?.date_of_birth ?? null,
         isPersonal: true,
       },
@@ -149,22 +153,22 @@ export function PatientHomeScreen({ navigation }: any) {
     const openMember = (r: MemberRow) =>
       navigation.navigate('Consultations', {
         memberId: r.memberId,
-        title: r.isPersonal ? `${r.label} (eu)` : r.label,
+        title: r.isPersonal ? `${r.label} ${t.home.meParenthetical}` : r.label,
       });
 
     const onRemove = (r: MemberRow) => {
       if (!r.memberId) return;
       confirmAction({
-        title: 'Remover membro',
-        message: `Remover ${r.label} e as suas consultas? Esta ação não pode ser anulada.`,
-        confirmLabel: 'Remover',
+        title: t.home.removeMemberTitle,
+        message: t.home.removeMemberMsg(r.label),
+        confirmLabel: t.common.remove,
         destructive: true,
         onConfirm: async () => {
           try {
             await removeMemberProfile(r.memberId!);
             await reload();
           } catch (e: any) {
-            setError(e.message ?? 'Não foi possível remover.');
+            setError(e.message ?? t.home.removeError);
           }
         },
       });
@@ -172,8 +176,8 @@ export function PatientHomeScreen({ navigation }: any) {
 
     return (
       <View style={styles.container}>
-        <Text style={styles.familyTitle}>Família ({total}/{FAMILY_MAX})</Text>
-        <Text style={styles.familyHint}>Escolhe de quem são as consultas.</Text>
+        <Text style={styles.familyTitle}>{t.home.familyTitle(total, FAMILY_MAX)}</Text>
+        <Text style={styles.familyHint}>{t.home.familyPick}</Text>
         <FlatList
           data={rows}
           keyExtractor={(r) => r.memberId ?? 'self'}
@@ -189,14 +193,14 @@ export function PatientHomeScreen({ navigation }: any) {
                 <View style={styles.flex}>
                   <Text style={styles.chatName}>
                     {item.label}
-                    {item.isPersonal ? <Text style={styles.tag}>  (eu)</Text> : null}
+                    {item.isPersonal ? <Text style={styles.tag}>{t.home.meTag}</Text> : null}
                     {age ? <Text style={styles.age}>{`  ·  ${age}`}</Text> : null}
                   </Text>
-                  {unread && <Text style={styles.unreadText}>Nova resposta do terapeuta</Text>}
+                  {unread && <Text style={styles.unreadText}>{t.home.newReplyFromTherapist}</Text>}
                 </View>
                 {!item.isPersonal && (
                   <Pressable onPress={() => onRemove(item)} hitSlop={8}>
-                    <Text style={styles.remove}>Remover</Text>
+                    <Text style={styles.remove}>{t.common.remove}</Text>
                   </Pressable>
                 )}
               </Pressable>
@@ -209,10 +213,10 @@ export function PatientHomeScreen({ navigation }: any) {
                 onPress={() => navigation.navigate('AddMember')}
                 style={({ pressed }) => [styles.addRow, pressed && styles.rowPressed]}
               >
-                <Text style={styles.addText}>＋ Adicionar membro</Text>
+                <Text style={styles.addText}>{t.home.addMember}</Text>
               </Pressable>
             ) : (
-              <Text style={styles.familyHint}>Limite de {FAMILY_MAX} pessoas atingido.</Text>
+              <Text style={styles.familyHint}>{t.home.familyLimit(FAMILY_MAX)}</Text>
             )
           }
         />

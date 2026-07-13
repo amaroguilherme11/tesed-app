@@ -5,6 +5,7 @@ import { TextField } from '@/components/TextField';
 import { DateField, parseDateBR } from '@/components/DateField';
 import { Button } from '@/components/Button';
 import { addMemberProfile } from '@/lib/family';
+import { useI18n } from '@/i18n';
 import { colors, fontSize, spacing } from '@/theme';
 
 /**
@@ -12,25 +13,26 @@ import { colors, fontSize, spacing } from '@/theme';
  * Sem email/conta — é um perfil gerido pelo titular.
  */
 export function AddMemberScreen({ navigation }: any) {
+  const { t } = useI18n();
   const [fullName, setFullName] = useState('');
   const [dob, setDob] = useState('');
   const [loading, setLoading] = useState(false);
 
   const onSubmit = async () => {
     if (!fullName.trim()) {
-      return Alert.alert('Falta o nome', 'Indica o nome completo do membro.');
+      return Alert.alert(t.addMember.missingNameTitle, t.addMember.missingNameMsg);
     }
     // Data de nascimento obrigatória (tal como o nome).
     const isoDob = parseDateBR(dob);
     if (!isoDob) {
-      return Alert.alert('Data inválida', 'Indica a data de nascimento no formato DD/MM/AAAA.');
+      return Alert.alert(t.auth.invalidDateTitle, t.auth.invalidDateMsg);
     }
     setLoading(true);
     try {
       await addMemberProfile(fullName.trim(), isoDob);
       navigation.goBack();
     } catch (e: any) {
-      Alert.alert('Não foi possível adicionar', e.message ?? 'Erro desconhecido.');
+      Alert.alert(t.addMember.couldNotAddTitle, e.message ?? t.common.unknownError);
     } finally {
       setLoading(false);
     }
@@ -38,14 +40,11 @@ export function AddMemberScreen({ navigation }: any) {
 
   return (
     <Screen>
-      <Text style={styles.title}>Adicionar membro da família</Text>
-      <Text style={styles.muted}>
-        Cria um perfil para um familiar (ex.: um filho). Cada membro tem o seu próprio
-        chat com o terapeuta, para separar os casos.
-      </Text>
-      <TextField label="Nome completo" value={fullName} onChangeText={setFullName} />
-      <DateField label="Data de nascimento" value={dob} onChangeText={setDob} />
-      <Button title="Adicionar membro" onPress={onSubmit} loading={loading} />
+      <Text style={styles.title}>{t.addMember.title}</Text>
+      <Text style={styles.muted}>{t.addMember.hint}</Text>
+      <TextField label={t.auth.fullName} value={fullName} onChangeText={setFullName} />
+      <DateField label={t.auth.dateOfBirth} value={dob} onChangeText={setDob} />
+      <Button title={t.addMember.addButton} onPress={onSubmit} loading={loading} />
     </Screen>
   );
 }

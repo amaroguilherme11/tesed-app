@@ -1,4 +1,5 @@
 import { Alert, Platform } from 'react-native';
+import { getStrings } from '@/i18n';
 
 /**
  * Confirmação cross-platform.
@@ -13,7 +14,8 @@ export function confirmAction(params: {
   destructive?: boolean;
   onConfirm: () => void;
 }): void {
-  const { title, message, confirmLabel = 'Confirmar', destructive = false, onConfirm } = params;
+  const s = getStrings().common;
+  const { title, message, confirmLabel = s.confirm, destructive = false, onConfirm } = params;
 
   if (Platform.OS === 'web') {
     const ok = (globalThis as any).window?.confirm(`${title}\n\n${message}`);
@@ -22,7 +24,7 @@ export function confirmAction(params: {
   }
 
   Alert.alert(title, message, [
-    { text: 'Cancelar', style: 'cancel' },
+    { text: s.cancel, style: 'cancel' },
     { text: confirmLabel, style: destructive ? 'destructive' : 'default', onPress: onConfirm },
   ]);
 }

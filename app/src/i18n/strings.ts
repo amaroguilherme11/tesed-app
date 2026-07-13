@@ -7,14 +7,29 @@
  *   consulta -> consultation | titular -> primary member | membro -> family member
  *   terapeuta -> therapist
  * Os ecrãs do TERAPEUTA não são traduzidos (conta única da clínica, PT).
+ *
+ * Nota: os parâmetros das funções são anotados em `pt`; em `en` o tipo vem por
+ * contexto (`typeof pt`), por isso podem ser omitidos.
  */
 
 export const pt = {
+  common: {
+    back: 'Voltar',
+    cancel: 'Cancelar',
+    confirm: 'Confirmar',
+    remove: 'Remover',
+    unknownError: 'Erro desconhecido.',
+  },
   nav: {
     login: 'Entrar',
     register: 'Criar conta',
     forgotPassword: 'Recuperar password',
     resetPassword: 'Nova password',
+    consultations: 'Consultas',
+    consultation: 'Consulta',
+    addMember: 'Adicionar membro',
+    files: 'Ficheiros',
+    subscription: 'Subscrição',
   },
   auth: {
     tagline: 'Comunicação com o seu terapeuta, sem se perder nada.',
@@ -85,14 +100,130 @@ export const pt = {
     CV: 'Cabo Verde',
     US: 'EUA / Canadá',
   },
+  home: {
+    manage: 'Gestão',
+    myConsultation: 'A minha consulta',
+    loadError: 'Erro a carregar as consultas.',
+    couldNotOpenTitle: 'Não foi possível abrir',
+    familyTitle: (n: number, max: number) => `Família (${n}/${max})`,
+    familyPick: 'Escolhe de quem são as consultas.',
+    me: 'Eu',
+    meTag: '  (eu)',
+    meParenthetical: '(eu)',
+    newReplyFromTherapist: 'Nova resposta do terapeuta',
+    addMember: '＋ Adicionar membro',
+    familyLimit: (max: number) => `Limite de ${max} pessoas atingido.`,
+    removeMemberTitle: 'Remover membro',
+    removeMemberMsg: (name: string) =>
+      `Remover ${name} e as suas consultas? Esta ação não pode ser anulada.`,
+    removeError: 'Não foi possível remover.',
+  },
+  consultations: {
+    hasOpenHint: 'Tens uma consulta aberta — toca nela para continuar.',
+    newConsultation: 'Nova consulta',
+    needSubscriptionHint:
+      'Precisas de uma subscrição ativa para abrir uma consulta. Toca em "Gestão".',
+    consultationOf: (date: string) => `Consulta de ${date}`,
+    openNewReply: 'Aberta · nova resposta do terapeuta',
+    open: 'Aberta',
+    closedReadOnly: 'Fechada · só leitura',
+    emptyNone: 'Ainda não tens consultas.',
+    emptyStartHint: ' Abre a primeira com "Nova consulta".',
+    lockNoSubscription:
+      'Precisas de uma subscrição ativa para enviar mensagens. Toca em "Gestão" para inserir um código.',
+    closedReadOnlyMessage:
+      'Esta consulta está fechada. Podes ler o histórico, mas não podes enviar mensagens.',
+  },
+  chat: {
+    emptyFirst: 'Ainda não há mensagens. Escreve a primeira.',
+    inputPlaceholder: 'Escrever mensagem…',
+    send: 'Enviar',
+    attachLabel: 'Anexar foto ou ficheiro',
+    takePhoto: 'Tirar foto',
+    choosePhotos: 'Escolher fotos',
+    sendFile: 'Enviar ficheiro',
+    couldNotSendTitle: 'Não foi possível enviar',
+    noAccessTitle: 'Sem acesso',
+    couldNotOpen: 'Não foi possível abrir.',
+    tapToOpen: 'tocar para abrir',
+  },
+  chatScreen: {
+    conversation: 'Conversa',
+    filesPrefix: (title: string) => `Ficheiros — ${title}`,
+  },
+  files: {
+    empty: 'Ainda não foram trocados ficheiros nesta conversa.',
+    sentByMe: 'Enviado por mim',
+    received: 'Recebido',
+  },
+  subscription: {
+    mySubscription: 'A minha subscrição',
+    active: 'ATIVA',
+    expired: 'EXPIRADA',
+    plan: 'Plano:',
+    individual: 'Individual',
+    family: 'Família',
+    validity: 'Validade:',
+    daysLeft: (n: number) => `Faltam ${n} dias.`,
+    manageFamilyHint: 'Gere os membros da família no ecrã principal (lista de chats).',
+    noSubscription: 'Ainda não tens subscrição ativa. Insere um código para ativar.',
+    enterCode: 'Inserir código',
+    enterCodeHint: 'Recebeste um código em consulta ou na compra no website? Insere-o aqui.',
+    codeLabel: 'Código',
+    redeem: 'Resgatar código',
+    activatedTitle: 'Subscrição ativada',
+    activatedMsg: 'O teu código foi resgatado com sucesso.',
+    couldNotRedeemTitle: 'Não foi possível resgatar',
+  },
+  addMember: {
+    title: 'Adicionar membro da família',
+    hint:
+      'Cria um perfil para um familiar (ex.: um filho). Cada membro tem o seu próprio chat com o terapeuta, para separar os casos.',
+    addButton: 'Adicionar membro',
+    missingNameTitle: 'Falta o nome',
+    missingNameMsg: 'Indica o nome completo do membro.',
+    couldNotAddTitle: 'Não foi possível adicionar',
+  },
+  attachments: {
+    noCameraAccess: 'Sem acesso à câmara. Ativa a permissão nas definições do telemóvel.',
+    noPhotosAccess: 'Sem acesso às fotos. Ativa a permissão nas definições do telemóvel.',
+  },
+  age: {
+    year: 'ano',
+    years: 'anos',
+    month: 'mês',
+    months: 'meses',
+    newborn: 'recém-nascido',
+  },
+  dates: {
+    today: 'Hoje',
+    yesterday: 'Ontem',
+    months: [
+      'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+      'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
+    ],
+    longDate: (day: number, month: string, year: number) => `${day} de ${month} de ${year}`,
+  },
 };
 
 export const en: typeof pt = {
+  common: {
+    back: 'Back',
+    cancel: 'Cancel',
+    confirm: 'Confirm',
+    remove: 'Remove',
+    unknownError: 'Unknown error.',
+  },
   nav: {
     login: 'Log in',
     register: 'Create account',
     forgotPassword: 'Reset password',
     resetPassword: 'New password',
+    consultations: 'Consultations',
+    consultation: 'Consultation',
+    addMember: 'Add family member',
+    files: 'Files',
+    subscription: 'Subscription',
   },
   auth: {
     tagline: 'Talk to your therapist, without missing a thing.',
@@ -162,5 +293,109 @@ export const en: typeof pt = {
     MZ: 'Mozambique',
     CV: 'Cape Verde',
     US: 'USA / Canada',
+  },
+  home: {
+    manage: 'Manage',
+    myConsultation: 'My consultation',
+    loadError: 'Could not load consultations.',
+    couldNotOpenTitle: 'Could not open',
+    familyTitle: (n, max) => `Family (${n}/${max})`,
+    familyPick: 'Choose whose consultations to view.',
+    me: 'Me',
+    meTag: '  (me)',
+    meParenthetical: '(me)',
+    newReplyFromTherapist: 'New reply from the therapist',
+    addMember: '＋ Add family member',
+    familyLimit: (max) => `Limit of ${max} people reached.`,
+    removeMemberTitle: 'Remove family member',
+    removeMemberMsg: (name) => `Remove ${name} and their consultations? This can't be undone.`,
+    removeError: 'Could not remove.',
+  },
+  consultations: {
+    hasOpenHint: 'You have an open consultation — tap it to continue.',
+    newConsultation: 'New consultation',
+    needSubscriptionHint:
+      'You need an active subscription to open a consultation. Tap "Manage".',
+    consultationOf: (date) => `Consultation of ${date}`,
+    openNewReply: 'Open · new reply from the therapist',
+    open: 'Open',
+    closedReadOnly: 'Closed · read-only',
+    emptyNone: "You don't have any consultations yet.",
+    emptyStartHint: ' Start your first one with "New consultation".',
+    lockNoSubscription:
+      'You need an active subscription to send messages. Tap "Manage" to enter a code.',
+    closedReadOnlyMessage:
+      "This consultation is closed. You can read the history, but you can't send messages.",
+  },
+  chat: {
+    emptyFirst: 'No messages yet. Write the first one.',
+    inputPlaceholder: 'Write a message…',
+    send: 'Send',
+    attachLabel: 'Attach photo or file',
+    takePhoto: 'Take photo',
+    choosePhotos: 'Choose photos',
+    sendFile: 'Send file',
+    couldNotSendTitle: 'Could not send',
+    noAccessTitle: 'No access',
+    couldNotOpen: "Couldn't open.",
+    tapToOpen: 'tap to open',
+  },
+  chatScreen: {
+    conversation: 'Conversation',
+    filesPrefix: (title) => `Files — ${title}`,
+  },
+  files: {
+    empty: 'No files have been exchanged in this conversation yet.',
+    sentByMe: 'Sent by me',
+    received: 'Received',
+  },
+  subscription: {
+    mySubscription: 'My subscription',
+    active: 'ACTIVE',
+    expired: 'EXPIRED',
+    plan: 'Plan:',
+    individual: 'Individual',
+    family: 'Family',
+    validity: 'Valid until:',
+    daysLeft: (n) => `${n} days left.`,
+    manageFamilyHint: 'Manage your family members on the home screen (chat list).',
+    noSubscription: "You don't have an active subscription yet. Enter a code to activate one.",
+    enterCode: 'Enter code',
+    enterCodeHint:
+      'Did you receive a code in a consultation or when purchasing on the website? Enter it here.',
+    codeLabel: 'Code',
+    redeem: 'Redeem code',
+    activatedTitle: 'Subscription activated',
+    activatedMsg: 'Your code was redeemed successfully.',
+    couldNotRedeemTitle: 'Could not redeem',
+  },
+  addMember: {
+    title: 'Add a family member',
+    hint:
+      'Create a profile for a family member (e.g. a child). Each member has their own chat with the therapist, to keep cases separate.',
+    addButton: 'Add family member',
+    missingNameTitle: 'Name required',
+    missingNameMsg: "Enter the member's full name.",
+    couldNotAddTitle: 'Could not add',
+  },
+  attachments: {
+    noCameraAccess: 'No camera access. Enable the permission in your phone settings.',
+    noPhotosAccess: 'No photo access. Enable the permission in your phone settings.',
+  },
+  age: {
+    year: 'year',
+    years: 'years',
+    month: 'month',
+    months: 'months',
+    newborn: 'newborn',
+  },
+  dates: {
+    today: 'Today',
+    yesterday: 'Yesterday',
+    months: [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December',
+    ],
+    longDate: (day, month, year) => `${month} ${day}, ${year}`,
   },
 };

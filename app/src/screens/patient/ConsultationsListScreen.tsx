@@ -1,11 +1,7 @@
 import { useCallback, useLayoutEffect, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import {
-  ConsultationsList,
-  LOCK_NO_SUBSCRIPTION,
-  CONSULTA_CLOSED,
-} from '@/components/ConsultationsList';
+import { ConsultationsList } from '@/components/ConsultationsList';
 import {
   Consultation,
   createConsultation,
@@ -13,6 +9,7 @@ import {
 } from '@/lib/consultations';
 import { getMySubscription } from '@/lib/subscriptions';
 import { markConversationRead } from '@/lib/patientChats';
+import { useI18n } from '@/i18n';
 import { colors, spacing } from '@/theme';
 
 /**
@@ -21,6 +18,7 @@ import { colors, spacing } from '@/theme';
  */
 export function ConsultationsListScreen({ route, navigation }: any) {
   const { memberId, title } = route.params;
+  const { t } = useI18n();
   const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [isActive, setIsActive] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -40,15 +38,19 @@ export function ConsultationsListScreen({ route, navigation }: any) {
   );
 
   useLayoutEffect(() => {
-    navigation.setOptions({ title: title ?? 'Consultas' });
-  }, [navigation, title]);
+    navigation.setOptions({ title: title ?? t.nav.consultations });
+  }, [navigation, title, t]);
 
   const openConsulta = (c: Consultation) => {
     if (c.is_open) markConversationRead(c.conversation_id); // já viu a resposta
     navigation.navigate('PatientChat', {
       conversationId: c.conversation_id,
       title,
-      lockedReason: c.is_open ? (isActive ? null : LOCK_NO_SUBSCRIPTION) : CONSULTA_CLOSED,
+      lockedReason: c.is_open
+        ? isActive
+          ? null
+          : t.consultations.lockNoSubscription
+        : t.consultations.closedReadOnlyMessage,
     });
   };
 
@@ -59,7 +61,7 @@ export function ConsultationsListScreen({ route, navigation }: any) {
       await load();
       navigation.navigate('PatientChat', { conversationId: id, title, lockedReason: null });
     } catch (e: any) {
-      Alert.alert('Não foi possível abrir', e.message ?? 'Erro desconhecido.');
+      Alert.alert(t.home.couldNotOpenTitle, e.message ?? t.common.unknownError);
     } finally {
       setCreating(false);
     }

@@ -6,11 +6,13 @@ import { AddMemberScreen } from '@/screens/patient/AddMemberScreen';
 import { ConversationFilesScreen } from '@/screens/shared/ConversationFilesScreen';
 import { SubscriptionScreen } from '@/screens/patient/SubscriptionScreen';
 import { HeaderLogo } from '@/components/HeaderLogo';
+import { useI18n } from '@/i18n';
 import { colors } from '@/theme';
 
 const Stack = createNativeStackNavigator();
 
 export function PatientNavigator() {
+  const { t } = useI18n();
   return (
     <Stack.Navigator
       screenOptions={{
@@ -18,7 +20,7 @@ export function PatientNavigator() {
         headerTintColor: colors.white,
         contentStyle: { backgroundColor: colors.bg },
         // Rótulo do botão de voltar (senão o iOS mostra o nome técnico do ecrã).
-        headerBackTitle: 'Voltar',
+        headerBackTitle: t.common.back,
       }}
     >
       <Stack.Screen
@@ -34,27 +36,27 @@ export function PatientNavigator() {
       <Stack.Screen
         name="Consultations"
         component={ConsultationsListScreen}
-        options={{ title: 'Consultas' }}
+        options={{ title: t.nav.consultations }}
       />
       <Stack.Screen
         name="PatientChat"
         component={PatientChatScreen}
-        options={{ title: 'Consulta' }}
+        options={{ title: t.nav.consultation }}
       />
       <Stack.Screen
         name="AddMember"
         component={AddMemberScreen}
-        options={{ title: 'Adicionar membro' }}
+        options={{ title: t.nav.addMember }}
       />
       <Stack.Screen
         name="PatientFiles"
         component={ConversationFilesScreen}
-        options={({ route }: any) => ({ title: route.params?.title ?? 'Ficheiros' })}
+        options={({ route }: any) => ({ title: route.params?.title ?? t.nav.files })}
       />
       <Stack.Screen
         name="Subscription"
         component={SubscriptionScreen}
-        options={{ title: 'Subscrição' }}
+        options={{ title: t.nav.subscription }}
       />
     </Stack.Navigator>
   );
