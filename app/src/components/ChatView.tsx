@@ -19,7 +19,18 @@ import { useAuth } from '@/contexts/AuthContext';
 import { MessageBubble } from '@/components/MessageBubble';
 import { pickFiles, pickImages, takePhoto, sendAttachment, PickedFile } from '@/lib/attachments';
 import { formatDateSeparator, isSameDay } from '@/lib/date';
+import { Message } from '@/lib/types';
 import { colors, fontSize, radius, spacing } from '@/theme';
+
+/**
+ * Linha da lista do chat: ou uma mensagem, ou um separador de dia. Tratar os
+ * separadores como LINHAS PRÓPRIAS (e não desenhá-los dentro da célula da bolha)
+ * garante que ficam sempre por cima da 1ª mensagem do dia — a posição de um
+ * elemento dentro de uma célula de lista invertida não é fiável.
+ */
+type ChatRow =
+  | { kind: 'sep'; key: string; date: string }
+  | { kind: 'msg'; key: string; msg: Message };
 
 /**
  * Vista de conversa partilhada por paciente e médico.
@@ -48,9 +59,24 @@ export function ChatView({
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  // Lista INVERTIDA: os dados vão do mais recente (fundo) para o mais antigo (topo),
-  // para o chat ABRIR JÁ nas mensagens recentes, sem qualquer scroll de abertura.
-  const data = useMemo(() => messages.slice().reverse(), [messages]);
+  // Lista INVERTIDA: as linhas vão do mais recente (fundo) para o mais antigo
+  // (topo), para o chat ABRIR JÁ nas mensagens recentes, sem scroll de abertura.
+  // Construímos primeiro em ordem cronológica, com um separador ANTES da 1ª
+  // mensagem de cada dia, e só depois invertemos — assim o separador fica sempre
+  // por cima do dia a que pertence (independente da orientação da célula).
+  const rows = useMemo<ChatRow[]>(() => {
+    const out: ChatRow[] = [];
+    for (let i = 0; i < messages.length; i++) {
+      const m = messages[i];
+      const prev = messages[i - 1];
+      if (!prev || !isSameDay(prev.created_at, m.created_at)) {
+        out.push({ kind: 'sep', key: `sep-${m.id}`, date: m.created_at });
+      }
+      out.push({ kind: 'msg', key: m.id, msg: m });
+    }
+    out.reverse();
+    return out;
+  }, [messages]);
   const locked = !!lockedReason;
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
@@ -135,7 +161,7 @@ export function ChatView({
       // 'padding' calcular o espaço certo (senão a barra de escrita fica tapada).
       keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight + extraKeyboardOffset : 0}
     >
-      {data.length === 0 ? (
+      {messages.length === 0 ? (
         // Estado vazio à parte (a lista invertida viraria o texto ao contrário).
         <View style={styles.emptyWrap}>
           <Text style={styles.empty}>Ainda não há mensagens. Escreve a primeira.</Text>
@@ -143,30 +169,23 @@ export function ChatView({
       ) : (
         <FlatList
           style={styles.list}
-          data={data}
+          data={rows}
           inverted
-          keyExtractor={(m) => m.id}
-          renderItem={({ item, index }) => {
-            // Lista invertida: o item "mais antigo, visualmente acima" é o seguinte
-            // no array (index+1). O separador de dia aparece acima da 1ª mensagem do dia.
-            const older = index < data.length - 1 ? data[index + 1] : null;
-            const showDate = !older || !isSameDay(older.created_at, item.created_at);
-            return (
-              <>
-                {showDate && (
-                  <View style={styles.daySepWrap}>
-                    <Text style={styles.daySepText}>{formatDateSeparator(item.created_at)}</Text>
-                  </View>
-                )}
-                <MessageBubble
-                  body={item.body}
-                  createdAt={item.created_at}
-                  mine={item.sender_id === uid}
-                  attachments={item.attachments}
-                />
-              </>
-            );
-          }}
+          keyExtractor={(r) => r.key}
+          renderItem={({ item }) =>
+            item.kind === 'sep' ? (
+              <View style={styles.daySepWrap}>
+                <Text style={styles.daySepText}>{formatDateSeparator(item.date)}</Text>
+              </View>
+            ) : (
+              <MessageBubble
+                body={item.msg.body}
+                createdAt={item.msg.created_at}
+                mine={item.msg.sender_id === uid}
+                attachments={item.msg.attachments}
+              />
+            )
+          }
           contentContainerStyle={styles.listContent}
         />
       )}
