@@ -18,6 +18,10 @@ import { DoctorNavigator } from '@/navigation/DoctorNavigator';
 
 const Stack = createNativeStackNavigator();
 
+// Título FIXO do separador do browser (web). Sem isto, o React Navigation usa o
+// nome do ecrã ativo (ex.: "PatientHome"). Em nativo é ignorado (no-op).
+const documentTitle = { formatter: () => 'Chat Tesed' };
+
 const authScreenOptions = {
   headerStyle: { backgroundColor: colors.primary },
   headerTintColor: colors.white,
@@ -35,7 +39,7 @@ export function RootNavigator() {
   // link de reset e tem de definir nova password antes de seguir.
   if (recoveringPassword) {
     return (
-      <NavigationContainer>
+      <NavigationContainer documentTitle={documentTitle}>
         <Stack.Navigator screenOptions={authScreenOptions}>
           <Stack.Screen
             name="ResetPassword"
@@ -61,7 +65,7 @@ export function RootNavigator() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer documentTitle={documentTitle}>
       {!session ? (
         <Stack.Navigator screenOptions={authScreenOptions}>
           <Stack.Screen name="Login" component={LoginScreen} options={{ title: t.nav.login }} />
