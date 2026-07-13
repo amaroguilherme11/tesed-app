@@ -6,10 +6,12 @@ import { DateField, parseDateBR } from '@/components/DateField';
 import { PhoneField, composePhone } from '@/components/PhoneField';
 import { Button } from '@/components/Button';
 import { useAuth } from '@/contexts/AuthContext';
+import { useI18n } from '@/i18n';
 import { colors, fontSize, radius, spacing } from '@/theme';
 
 export function RegisterScreen({ navigation }: any) {
   const { signUpPatient } = useAuth();
+  const { t } = useI18n();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [dob, setDob] = useState('');
@@ -20,17 +22,17 @@ export function RegisterScreen({ navigation }: any) {
   const [loading, setLoading] = useState(false);
 
   const onSubmit = async () => {
-    if (!fullName.trim()) return Alert.alert('Falta o nome', 'Indica o teu nome completo.');
+    if (!fullName.trim()) return Alert.alert(t.auth.missingNameTitle, t.auth.missingNameMsg);
     const isoDob = parseDateBR(dob);
     if (!isoDob) {
-      return Alert.alert('Data inválida', 'Indica a data de nascimento no formato DD/MM/AAAA.');
+      return Alert.alert(t.auth.invalidDateTitle, t.auth.invalidDateMsg);
     }
     const phone = composePhone(dial, phoneNumber);
     if (!phone) {
-      return Alert.alert('Telemóvel inválido', 'Indica um número de telemóvel válido.');
+      return Alert.alert(t.auth.invalidPhoneTitle, t.auth.invalidPhoneMsg);
     }
     if (password.length < 8) {
-      return Alert.alert('Password fraca', 'A password deve ter pelo menos 8 caracteres.');
+      return Alert.alert(t.auth.weakPasswordTitle, t.auth.weakPasswordMsg);
     }
     setLoading(true);
     try {
@@ -44,16 +46,13 @@ export function RegisterScreen({ navigation }: any) {
       });
       if (needsConfirmation) {
         // Confirmação de email ativa: ainda não há sessão. Volta ao login.
-        Alert.alert(
-          'Conta criada',
-          'Confirma o teu email para ativar a conta e depois inicia sessão.'
-        );
+        Alert.alert(t.auth.accountCreatedTitle, t.auth.accountCreatedMsg);
         navigation.navigate('Login');
       }
       // Caso contrário, o registo já criou sessão e a navegação por papel
       // leva o paciente diretamente à sua conversa — não navegar manualmente.
     } catch (e: any) {
-      Alert.alert('Não foi possível criar a conta', e.message ?? 'Erro desconhecido.');
+      Alert.alert(t.auth.createErrorTitle, e.message ?? t.auth.unknownError);
     } finally {
       setLoading(false);
     }
@@ -61,20 +60,20 @@ export function RegisterScreen({ navigation }: any) {
 
   return (
     <Screen>
-      <Text style={styles.title}>Criar conta de paciente</Text>
+      <Text style={styles.title}>{t.auth.registerTitle}</Text>
 
       <View style={styles.form}>
-        <TextField label="Nome completo" value={fullName} onChangeText={setFullName} />
-        <DateField label="Data de nascimento" value={dob} onChangeText={setDob} />
+        <TextField label={t.auth.fullName} value={fullName} onChangeText={setFullName} />
+        <DateField label={t.auth.dateOfBirth} value={dob} onChangeText={setDob} />
         <PhoneField
-          label="Telemóvel"
+          label={t.auth.phone}
           dial={dial}
           onChangeDial={setDial}
           number={phoneNumber}
           onChangeNumber={setPhoneNumber}
         />
         <TextField
-          label="Email"
+          label={t.auth.email}
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"
@@ -82,7 +81,7 @@ export function RegisterScreen({ navigation }: any) {
           autoComplete="email"
         />
         <TextField
-          label="Password (mín. 8 caracteres)"
+          label={t.auth.passwordMin}
           value={password}
           onChangeText={setPassword}
           secureTextEntry
@@ -93,13 +92,10 @@ export function RegisterScreen({ navigation }: any) {
           <View style={[styles.checkbox, consent && styles.checkboxOn]}>
             {consent && <Text style={styles.check}>✓</Text>}
           </View>
-          <Text style={styles.consentText}>
-            Li e aceito a Política de Privacidade e o tratamento dos meus dados de saúde
-            para efeitos de comunicação com o terapeuta.
-          </Text>
+          <Text style={styles.consentText}>{t.auth.consent}</Text>
         </Pressable>
 
-        <Button title="Criar conta" onPress={onSubmit} loading={loading} disabled={!consent} />
+        <Button title={t.auth.createAccount} onPress={onSubmit} loading={loading} disabled={!consent} />
       </View>
     </Screen>
   );

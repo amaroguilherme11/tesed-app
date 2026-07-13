@@ -4,6 +4,7 @@ import { Screen } from '@/components/Screen';
 import { TextField } from '@/components/TextField';
 import { Button } from '@/components/Button';
 import { useAuth } from '@/contexts/AuthContext';
+import { useI18n } from '@/i18n';
 import { colors, fontSize, spacing } from '@/theme';
 
 /**
@@ -13,23 +14,24 @@ import { colors, fontSize, spacing } from '@/theme';
  */
 export function ResetPasswordScreen() {
   const { completePasswordReset } = useAuth();
+  const { t } = useI18n();
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [loading, setLoading] = useState(false);
 
   const onSubmit = async () => {
     if (password.length < 8) {
-      return Alert.alert('Password fraca', 'A password deve ter pelo menos 8 caracteres.');
+      return Alert.alert(t.auth.weakPasswordTitle, t.auth.weakPasswordMsg);
     }
     if (password !== confirm) {
-      return Alert.alert('Não coincidem', 'As duas passwords têm de ser iguais.');
+      return Alert.alert(t.auth.passwordsDontMatchTitle, t.auth.passwordsDontMatchMsg);
     }
     setLoading(true);
     try {
       await completePasswordReset(password);
-      Alert.alert('Password alterada', 'Já podes iniciar sessão com a nova password.');
+      Alert.alert(t.auth.passwordChangedTitle, t.auth.passwordChangedMsg);
     } catch (e: any) {
-      Alert.alert('Erro', e.message ?? 'Não foi possível alterar a password.');
+      Alert.alert(t.auth.errorTitle, e.message ?? t.auth.resetErrorMsg);
     } finally {
       setLoading(false);
     }
@@ -37,21 +39,21 @@ export function ResetPasswordScreen() {
 
   return (
     <Screen>
-      <Text style={styles.title}>Definir nova password</Text>
-      <Text style={styles.subtitle}>Escolhe uma nova password para a tua conta.</Text>
+      <Text style={styles.title}>{t.auth.resetTitle}</Text>
+      <Text style={styles.subtitle}>{t.auth.resetSubtitle}</Text>
       <TextField
-        label="Nova password (mín. 8 caracteres)"
+        label={t.auth.newPasswordMin}
         value={password}
         onChangeText={setPassword}
         secureTextEntry
       />
       <TextField
-        label="Confirmar password"
+        label={t.auth.confirmPassword}
         value={confirm}
         onChangeText={setConfirm}
         secureTextEntry
       />
-      <Button title="Guardar password" onPress={onSubmit} loading={loading} />
+      <Button title={t.auth.savePassword} onPress={onSubmit} loading={loading} />
     </Screen>
   );
 }

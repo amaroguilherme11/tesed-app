@@ -1,4 +1,5 @@
 import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { useI18n } from '@/i18n';
 import { colors, radius, spacing, fontSize } from '@/theme';
 
 /**
@@ -15,6 +16,7 @@ export function DateField({
   value: string;
   onChangeText: (v: string) => void;
 }) {
+  const { t } = useI18n();
   const handle = (raw: string) => {
     const digits = raw.replace(/\D/g, '').slice(0, 8); // DDMMYYYY
     let out = digits;
@@ -29,7 +31,7 @@ export function DateField({
       <TextInput
         value={value}
         onChangeText={handle}
-        placeholder="DD/MM/AAAA"
+        placeholder={t.fields.datePlaceholder}
         placeholderTextColor={colors.textMuted}
         keyboardType="number-pad"
         style={styles.input}

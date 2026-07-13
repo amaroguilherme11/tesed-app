@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useI18n } from '@/i18n';
 import { colors, radius, spacing, fontSize, fonts } from '@/theme';
 
 /**
@@ -38,8 +39,10 @@ export function PhoneField({
   number: string;
   onChangeNumber: (n: string) => void;
 }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const selected = COUNTRIES.find((c) => c.dial === dial) ?? COUNTRIES[0];
+  const countryName = (code: string) => t.countries[code as keyof typeof t.countries];
 
   return (
     <View style={styles.wrapper}>
@@ -53,8 +56,8 @@ export function PhoneField({
         <TextInput
           style={styles.input}
           value={number}
-          onChangeText={(t) => onChangeNumber(t.replace(/[^\d\s]/g, ''))}
-          placeholder="912 345 678"
+          onChangeText={(v) => onChangeNumber(v.replace(/[^\d\s]/g, ''))}
+          placeholder={t.fields.phonePlaceholder}
           placeholderTextColor={colors.textMuted}
           keyboardType="phone-pad"
         />
@@ -64,7 +67,7 @@ export function PhoneField({
         <SafeAreaView style={styles.backdrop} edges={['top', 'bottom', 'left', 'right']}>
           <Pressable style={styles.backdropPress} onPress={() => setOpen(false)}>
             <View style={styles.sheet}>
-            <Text style={styles.sheetTitle}>Indicativo do país</Text>
+            <Text style={styles.sheetTitle}>{t.fields.countryDialTitle}</Text>
             <ScrollView>
               {COUNTRIES.map((c) => (
                 <Pressable
@@ -76,7 +79,7 @@ export function PhoneField({
                   }}
                 >
                   <Text style={styles.optionText}>
-                    {c.flag} {c.name}
+                    {c.flag} {countryName(c.code)}
                   </Text>
                   <Text style={styles.optionDial}>+{c.dial}</Text>
                 </Pressable>

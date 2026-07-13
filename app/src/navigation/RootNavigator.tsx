@@ -2,6 +2,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ActivityIndicator, View } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
+import { useI18n } from '@/i18n';
+import { LanguageToggle } from '@/components/LanguageToggle';
 import { colors } from '@/theme';
 
 // Auth
@@ -20,10 +22,14 @@ const authScreenOptions = {
   headerStyle: { backgroundColor: colors.primary },
   headerTintColor: colors.white,
   contentStyle: { backgroundColor: colors.bg },
+  // Botão de idioma no cabeçalho (visível já a partir do login, para um paciente
+  // de língua inglesa poder trocar antes de sequer ter conta).
+  headerRight: () => <LanguageToggle tint={colors.white} />,
 };
 
 export function RootNavigator() {
   const { session, profile, loading, recoveringPassword } = useAuth();
+  const { t } = useI18n();
 
   // Recuperação de password tem prioridade sobre tudo: o utilizador chegou por
   // link de reset e tem de definir nova password antes de seguir.
@@ -34,7 +40,7 @@ export function RootNavigator() {
           <Stack.Screen
             name="ResetPassword"
             component={ResetPasswordScreen}
-            options={{ title: 'Nova password', headerBackVisible: false }}
+            options={{ title: t.nav.resetPassword, headerBackVisible: false }}
           />
         </Stack.Navigator>
       </NavigationContainer>
@@ -58,12 +64,12 @@ export function RootNavigator() {
     <NavigationContainer>
       {!session ? (
         <Stack.Navigator screenOptions={authScreenOptions}>
-          <Stack.Screen name="Login" component={LoginScreen} options={{ title: 'Entrar' }} />
-          <Stack.Screen name="Register" component={RegisterScreen} options={{ title: 'Criar conta' }} />
+          <Stack.Screen name="Login" component={LoginScreen} options={{ title: t.nav.login }} />
+          <Stack.Screen name="Register" component={RegisterScreen} options={{ title: t.nav.register }} />
           <Stack.Screen
             name="ForgotPassword"
             component={ForgotPasswordScreen}
-            options={{ title: 'Recuperar password' }}
+            options={{ title: t.nav.forgotPassword }}
           />
         </Stack.Navigator>
       ) : profile?.role === 'doctor' ? (

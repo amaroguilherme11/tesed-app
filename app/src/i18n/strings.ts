@@ -1,0 +1,166 @@
+/**
+ * Dicionários de tradução (PT / EN) — visão do PACIENTE.
+ *
+ * `pt` é a fonte de verdade da forma; `en` é tipado como `typeof pt`, por isso o
+ * TypeScript obriga a que tenha exatamente as mesmas chaves (chave em falta = erro
+ * de compilação). Termos técnicos decididos com o cliente:
+ *   consulta -> consultation | titular -> primary member | membro -> family member
+ *   terapeuta -> therapist
+ * Os ecrãs do TERAPEUTA não são traduzidos (conta única da clínica, PT).
+ */
+
+export const pt = {
+  nav: {
+    login: 'Entrar',
+    register: 'Criar conta',
+    forgotPassword: 'Recuperar password',
+    resetPassword: 'Nova password',
+  },
+  auth: {
+    tagline: 'Comunicação com o seu terapeuta, sem se perder nada.',
+    email: 'Email',
+    password: 'Password',
+    login: 'Entrar',
+    forgotPassword: 'Esqueci-me da password',
+    noAccount: 'Ainda não tem conta?',
+    createPatientAccount: 'Criar conta de paciente',
+    loginErrorTitle: 'Não foi possível entrar',
+    unknownError: 'Erro desconhecido.',
+
+    registerTitle: 'Criar conta de paciente',
+    fullName: 'Nome completo',
+    dateOfBirth: 'Data de nascimento',
+    phone: 'Telemóvel',
+    passwordMin: 'Password (mín. 8 caracteres)',
+    consent:
+      'Li e aceito a Política de Privacidade e o tratamento dos meus dados de saúde para efeitos de comunicação com o terapeuta.',
+    createAccount: 'Criar conta',
+    missingNameTitle: 'Falta o nome',
+    missingNameMsg: 'Indica o teu nome completo.',
+    invalidDateTitle: 'Data inválida',
+    invalidDateMsg: 'Indica a data de nascimento no formato DD/MM/AAAA.',
+    invalidPhoneTitle: 'Telemóvel inválido',
+    invalidPhoneMsg: 'Indica um número de telemóvel válido.',
+    weakPasswordTitle: 'Password fraca',
+    weakPasswordMsg: 'A password deve ter pelo menos 8 caracteres.',
+    accountCreatedTitle: 'Conta criada',
+    accountCreatedMsg: 'Confirma o teu email para ativar a conta e depois inicia sessão.',
+    createErrorTitle: 'Não foi possível criar a conta',
+
+    forgotTitle: 'Recuperar password',
+    forgotSubtitle: 'Indica o teu email e enviamos um link para definires uma nova password.',
+    sendLink: 'Enviar link',
+    emailSentTitle: 'Email enviado',
+    emailSentMsg: 'Se a conta existir, vais receber instruções por email.',
+    errorTitle: 'Erro',
+    forgotErrorMsg: 'Não foi possível enviar o email.',
+
+    resetTitle: 'Definir nova password',
+    resetSubtitle: 'Escolhe uma nova password para a tua conta.',
+    newPasswordMin: 'Nova password (mín. 8 caracteres)',
+    confirmPassword: 'Confirmar password',
+    savePassword: 'Guardar password',
+    passwordsDontMatchTitle: 'Não coincidem',
+    passwordsDontMatchMsg: 'As duas passwords têm de ser iguais.',
+    passwordChangedTitle: 'Password alterada',
+    passwordChangedMsg: 'Já podes iniciar sessão com a nova password.',
+    resetErrorMsg: 'Não foi possível alterar a password.',
+  },
+  fields: {
+    datePlaceholder: 'DD/MM/AAAA',
+    phonePlaceholder: '912 345 678',
+    countryDialTitle: 'Indicativo do país',
+  },
+  countries: {
+    PT: 'Portugal',
+    BR: 'Brasil',
+    ES: 'Espanha',
+    FR: 'França',
+    GB: 'Reino Unido',
+    DE: 'Alemanha',
+    CH: 'Suíça',
+    LU: 'Luxemburgo',
+    AO: 'Angola',
+    MZ: 'Moçambique',
+    CV: 'Cabo Verde',
+    US: 'EUA / Canadá',
+  },
+};
+
+export const en: typeof pt = {
+  nav: {
+    login: 'Log in',
+    register: 'Create account',
+    forgotPassword: 'Reset password',
+    resetPassword: 'New password',
+  },
+  auth: {
+    tagline: 'Talk to your therapist, without missing a thing.',
+    email: 'Email',
+    password: 'Password',
+    login: 'Log in',
+    forgotPassword: 'Forgot your password?',
+    noAccount: "Don't have an account yet?",
+    createPatientAccount: 'Create patient account',
+    loginErrorTitle: 'Could not log in',
+    unknownError: 'Unknown error.',
+
+    registerTitle: 'Create patient account',
+    fullName: 'Full name',
+    dateOfBirth: 'Date of birth',
+    phone: 'Mobile number',
+    passwordMin: 'Password (min. 8 characters)',
+    consent:
+      'I have read and accept the Privacy Policy and the processing of my health data for the purpose of communicating with the therapist.',
+    createAccount: 'Create account',
+    missingNameTitle: 'Name required',
+    missingNameMsg: 'Please enter your full name.',
+    invalidDateTitle: 'Invalid date',
+    invalidDateMsg: 'Enter your date of birth as DD/MM/YYYY.',
+    invalidPhoneTitle: 'Invalid mobile number',
+    invalidPhoneMsg: 'Please enter a valid mobile number.',
+    weakPasswordTitle: 'Weak password',
+    weakPasswordMsg: 'The password must be at least 8 characters long.',
+    accountCreatedTitle: 'Account created',
+    accountCreatedMsg: 'Confirm your email to activate the account, then log in.',
+    createErrorTitle: 'Could not create the account',
+
+    forgotTitle: 'Reset password',
+    forgotSubtitle: "Enter your email and we'll send you a link to set a new password.",
+    sendLink: 'Send link',
+    emailSentTitle: 'Email sent',
+    emailSentMsg: "If the account exists, you'll receive instructions by email.",
+    errorTitle: 'Error',
+    forgotErrorMsg: 'Could not send the email.',
+
+    resetTitle: 'Set new password',
+    resetSubtitle: 'Choose a new password for your account.',
+    newPasswordMin: 'New password (min. 8 characters)',
+    confirmPassword: 'Confirm password',
+    savePassword: 'Save password',
+    passwordsDontMatchTitle: "Passwords don't match",
+    passwordsDontMatchMsg: 'The two passwords must be the same.',
+    passwordChangedTitle: 'Password changed',
+    passwordChangedMsg: 'You can now log in with your new password.',
+    resetErrorMsg: 'Could not change the password.',
+  },
+  fields: {
+    datePlaceholder: 'DD/MM/YYYY',
+    phonePlaceholder: '912 345 678',
+    countryDialTitle: 'Country code',
+  },
+  countries: {
+    PT: 'Portugal',
+    BR: 'Brazil',
+    ES: 'Spain',
+    FR: 'France',
+    GB: 'United Kingdom',
+    DE: 'Germany',
+    CH: 'Switzerland',
+    LU: 'Luxembourg',
+    AO: 'Angola',
+    MZ: 'Mozambique',
+    CV: 'Cape Verde',
+    US: 'USA / Canada',
+  },
+};

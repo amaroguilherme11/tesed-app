@@ -5,9 +5,11 @@ import { Screen } from '@/components/Screen';
 import { TextField } from '@/components/TextField';
 import { Button } from '@/components/Button';
 import { supabase } from '@/lib/supabase';
+import { useI18n } from '@/i18n';
 import { colors, fontSize, spacing } from '@/theme';
 
 export function ForgotPasswordScreen({ navigation }: any) {
+  const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -20,10 +22,10 @@ export function ForgotPasswordScreen({ navigation }: any) {
         redirectTo,
       });
       if (error) throw error;
-      Alert.alert('Email enviado', 'Se a conta existir, vais receber instruções por email.');
+      Alert.alert(t.auth.emailSentTitle, t.auth.emailSentMsg);
       navigation.goBack();
     } catch (e: any) {
-      Alert.alert('Erro', e.message ?? 'Não foi possível enviar o email.');
+      Alert.alert(t.auth.errorTitle, e.message ?? t.auth.forgotErrorMsg);
     } finally {
       setLoading(false);
     }
@@ -31,18 +33,16 @@ export function ForgotPasswordScreen({ navigation }: any) {
 
   return (
     <Screen>
-      <Text style={styles.title}>Recuperar password</Text>
-      <Text style={styles.subtitle}>
-        Indica o teu email e enviamos um link para definires uma nova password.
-      </Text>
+      <Text style={styles.title}>{t.auth.forgotTitle}</Text>
+      <Text style={styles.subtitle}>{t.auth.forgotSubtitle}</Text>
       <TextField
-        label="Email"
+        label={t.auth.email}
         value={email}
         onChangeText={setEmail}
         autoCapitalize="none"
         keyboardType="email-address"
       />
-      <Button title="Enviar link" onPress={onSubmit} loading={loading} />
+      <Button title={t.auth.sendLink} onPress={onSubmit} loading={loading} />
     </Screen>
   );
 }

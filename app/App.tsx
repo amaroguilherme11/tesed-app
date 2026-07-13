@@ -12,6 +12,7 @@ import {
   Quicksand_700Bold,
 } from '@expo-google-fonts/quicksand';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { LanguageProvider } from '@/i18n';
 import { RootNavigator } from '@/navigation/RootNavigator';
 import { UpdateGate } from '@/components/UpdateGate';
 import { applyBrandFont } from '@/theme/applyFont';
@@ -51,12 +52,14 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <AuthProvider>
-        <UpdateGate>
-          <RootNavigator />
-        </UpdateGate>
-        <StatusBar style="dark" />
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <UpdateGate>
+            <RootNavigator />
+          </UpdateGate>
+          <StatusBar style="dark" />
+        </AuthProvider>
+      </LanguageProvider>
     </SafeAreaProvider>
   );
 }
