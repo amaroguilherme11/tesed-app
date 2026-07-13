@@ -20,6 +20,11 @@ export const pt = {
     remove: 'Remover',
     unknownError: 'Erro desconhecido.',
   },
+  signOut: {
+    button: 'Sair',
+    confirmTitle: 'Terminar sessão',
+    confirmMsg: 'Tens a certeza de que queres sair?',
+  },
   nav: {
     login: 'Entrar',
     register: 'Criar conta',
@@ -208,6 +213,11 @@ export const en: typeof pt = {
     confirm: 'Confirm',
     remove: 'Remove',
     unknownError: 'Unknown error.',
+  },
+  signOut: {
+    button: 'Log out',
+    confirmTitle: 'Log out',
+    confirmMsg: 'Are you sure you want to log out?',
   },
   nav: {
     login: 'Log in',

@@ -1,17 +1,19 @@
 import { Pressable, Text, StyleSheet } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { confirmAction } from '@/lib/confirm';
+import { useI18n } from '@/i18n';
 import { colors, fontSize } from '@/theme';
 
 /** Botão de "Sair" para o cabeçalho — bolha clara, pede confirmação. */
 export function HeaderSignOutButton() {
   const { signOut } = useAuth();
+  const { t } = useI18n();
 
   const onPress = () => {
     confirmAction({
-      title: 'Terminar sessão',
-      message: 'Tens a certeza de que queres sair?',
-      confirmLabel: 'Sair',
+      title: t.signOut.confirmTitle,
+      message: t.signOut.confirmMsg,
+      confirmLabel: t.signOut.button,
       destructive: true,
       onConfirm: () => {
         signOut();
@@ -21,7 +23,7 @@ export function HeaderSignOutButton() {
 
   return (
     <Pressable onPress={onPress} hitSlop={10} style={({ pressed }) => [styles.btn, pressed && styles.pressed]}>
-      <Text style={styles.text}>Sair</Text>
+      <Text style={styles.text}>{t.signOut.button}</Text>
     </Pressable>
   );
 }
