@@ -36,7 +36,9 @@
     "web": {
       "favicon": "./assets/favicon.png",
       "bundler": "metro",
-      "output": "single"
+      "output": "single",
+      "name": "Chat Tesed",
+      "shortName": "Chat Tesed"
     },
     "extra": {
       "supabaseUrl": "",
