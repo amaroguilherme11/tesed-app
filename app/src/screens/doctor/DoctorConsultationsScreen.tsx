@@ -1,8 +1,7 @@
-import { useCallback, useLayoutEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useLayoutEffect, useState } from 'react';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { DoctorConsultation, getDoctorPatientConsultations } from '@/lib/consultations';
-import { formatAge } from '@/lib/age';
 import { colors, fontSize, radius, shadow, spacing } from '@/theme';
 
 function relativeTime(iso: string | null): string {
@@ -20,22 +19,25 @@ function fmtDate(iso: string): string {
   return `${dd}/${mm}/${d.getFullYear()}`;
 }
 
-type Section = { title: string; dob: string | null; data: DoctorConsultation[] };
-
 /**
- * Consultas de um paciente para o terapeuta, AGRUPADAS por membro (titular
- * primeiro), abertas no topo de cada membro; as fechadas ficam esbatidas.
- * route.params = { patientId, patientName, patientPhone? }
+ * Consultas de um paciente (individual) OU de UM membro da família (drill-down).
+ * route.params = { patientId, patientName, patientPhone?, memberId?, filterMember?, title? }
+ * - filterMember=true (família): mostra só as consultas de `memberId` (null = titular).
+ * - sem filterMember (individual): mostra todas (que são só do titular).
  */
 export function DoctorConsultationsScreen({ route, navigation }: any) {
-  const { patientId, patientName, patientPhone } = route.params;
+  const { patientId, patientName, patientPhone, memberId, filterMember, title } = route.params;
   const [items, setItems] = useState<DoctorConsultation[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
-    setItems(await getDoctorPatientConsultations(patientId));
+    let list = await getDoctorPatientConsultations(patientId);
+    if (filterMember) {
+      list = list.filter((c) => (c.member_id ?? null) === (memberId ?? null));
+    }
+    setItems(list);
     setLoading(false);
-  }, [patientId]);
+  }, [patientId, memberId, filterMember]);
 
   useFocusEffect(
     useCallback(() => {
@@ -44,24 +46,8 @@ export function DoctorConsultationsScreen({ route, navigation }: any) {
   );
 
   useLayoutEffect(() => {
-    navigation.setOptions({ title: patientName ?? 'Paciente' });
-  }, [navigation, patientName]);
-
-  // Agrupa por membro (null = titular). O titular vem primeiro; dentro de cada
-  // membro mantém-se a ordem da RPC (abertas antes das fechadas).
-  const sections = useMemo<Section[]>(() => {
-    const map = new Map<string, Section>();
-    for (const c of items) {
-      const key = c.member_id ?? '__titular__';
-      if (!map.has(key)) {
-        map.set(key, { title: c.member_name ?? patientName ?? 'Paciente', dob: c.member_dob, data: [] });
-      }
-      map.get(key)!.data.push(c);
-    }
-    const titular = map.get('__titular__');
-    const rest = [...map.entries()].filter(([k]) => k !== '__titular__').map(([, v]) => v);
-    return [...(titular ? [titular] : []), ...rest];
-  }, [items, patientName]);
+    navigation.setOptions({ title: title ?? patientName ?? 'Paciente' });
+  }, [navigation, title, patientName]);
 
   const open = (c: DoctorConsultation) =>
     navigation.navigate('Conversation', {
@@ -69,6 +55,8 @@ export function DoctorConsultationsScreen({ route, navigation }: any) {
       patientName: c.member_name ?? patientName,
       patientPhone,
       isOpen: c.is_open,
+      status: c.status,
+      isStandby: c.is_standby,
     });
 
   if (loading) {
@@ -80,23 +68,11 @@ export function DoctorConsultationsScreen({ route, navigation }: any) {
   }
 
   return (
-    <SectionList
-      sections={sections}
+    <FlatList
+      data={items}
       keyExtractor={(c) => c.conversation_id}
-      stickySectionHeadersEnabled={false}
-      renderSectionHeader={({ section }) => {
-        const age = formatAge((section as Section).dob);
-        return (
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>
-              {(section as Section).title}
-              {age ? <Text style={styles.sectionAge}>{`  ·  ${age}`}</Text> : null}
-            </Text>
-          </View>
-        );
-      }}
       renderItem={({ item }) => {
-        const unanswered = item.is_open && item.status === 'unanswered';
+        const unanswered = item.is_open && item.status === 'unanswered' && !item.is_standby;
         return (
           <Pressable
             onPress={() => open(item)}
@@ -113,36 +89,31 @@ export function DoctorConsultationsScreen({ route, navigation }: any) {
               </View>
               <Text style={styles.time}>{relativeTime(item.last_message_at)}</Text>
             </View>
-            {item.is_open ? (
-              unanswered ? (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>POR RESPONDER</Text>
-                </View>
-              ) : (
-                <Text style={styles.answered}>Aberta · respondida</Text>
-              )
-            ) : (
+            {!item.is_open ? (
               <Text style={styles.closed}>Fechada</Text>
+            ) : item.is_standby ? (
+              <View style={[styles.badge, styles.badgeStandby]}>
+                <Text style={styles.badgeText}>EM STANDBY</Text>
+              </View>
+            ) : unanswered ? (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>POR RESPONDER</Text>
+              </View>
+            ) : (
+              <Text style={styles.answered}>Aberta · respondida</Text>
             )}
           </Pressable>
         );
       }}
       contentContainerStyle={styles.listContent}
-      ListEmptyComponent={<Text style={styles.empty}>Este paciente ainda não tem consultas.</Text>}
+      ListEmptyComponent={<Text style={styles.empty}>Sem consultas.</Text>}
     />
   );
 }
 
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
-  listContent: { padding: spacing.md, paddingTop: spacing.sm },
-  sectionHeader: {
-    paddingTop: spacing.md,
-    paddingBottom: spacing.xs,
-    paddingHorizontal: spacing.xs,
-  },
-  sectionTitle: { fontSize: fontSize.base, fontWeight: '800', color: colors.text },
-  sectionAge: { fontWeight: '400', color: colors.textMuted, fontSize: fontSize.sm },
+  listContent: { padding: spacing.md },
   row: {
     backgroundColor: colors.surface,
     borderRadius: radius.base,
@@ -165,6 +136,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     marginTop: spacing.sm,
   },
+  badgeStandby: { backgroundColor: colors.standby },
   badgeText: { color: colors.white, fontSize: 12, fontWeight: '700' },
   answered: { color: colors.textMuted, fontSize: fontSize.sm, marginTop: spacing.sm },
   closed: { color: colors.textMuted, fontSize: fontSize.sm, marginTop: spacing.sm, fontStyle: 'italic' },

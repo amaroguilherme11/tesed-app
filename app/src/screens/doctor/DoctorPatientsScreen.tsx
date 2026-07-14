@@ -30,21 +30,36 @@ export function DoctorPatientsScreen({ navigation }: any) {
   }
 
   const needCount = patients.filter((p) => p.needs_response).length;
+  const standbyCount = patients.filter((p) => p.standby_count > 0).length;
 
+  // Família → seletor de membros (drill-down); individual → consultas diretas.
   const open = (p: DoctorPatientOverview) =>
-    navigation.navigate('DoctorConsultations', {
-      patientId: p.patient_id,
-      patientName: p.full_name ?? 'Paciente',
-      patientPhone: p.phone,
-    });
+    p.plan_type === 'family'
+      ? navigation.navigate('DoctorFamilyMembers', {
+          patientId: p.patient_id,
+          patientName: p.full_name ?? 'Paciente',
+          patientPhone: p.phone,
+          patientDob: p.date_of_birth,
+        })
+      : navigation.navigate('DoctorConsultations', {
+          patientId: p.patient_id,
+          patientName: p.full_name ?? 'Paciente',
+          patientPhone: p.phone,
+        });
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.counter}>{needCount}</Text>
-        <Text style={styles.counterLabel}>
-          {needCount === 1 ? 'paciente por responder' : 'pacientes por responder'}
-        </Text>
+        <View style={styles.counterBlock}>
+          <Text style={styles.counter}>{needCount}</Text>
+          <Text style={styles.counterLabel}>por responder</Text>
+        </View>
+        {standbyCount > 0 && (
+          <View style={styles.counterBlock}>
+            <Text style={[styles.counter, styles.counterStandby]}>{standbyCount}</Text>
+            <Text style={styles.counterLabel}>em standby</Text>
+          </View>
+        )}
       </View>
 
       <FlatList
@@ -73,13 +88,20 @@ export function DoctorPatientsScreen({ navigation }: any) {
                   : ' · sem consultas abertas'}
                 {item.sub_active ? '' : ' · subscrição inativa'}
               </Text>
-              {item.unanswered_count > 0 ? (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>
-                    {item.unanswered_count} POR RESPONDER
-                  </Text>
+              {(item.unanswered_count > 0 || item.standby_count > 0) && (
+                <View style={styles.badges}>
+                  {item.unanswered_count > 0 && (
+                    <View style={styles.badge}>
+                      <Text style={styles.badgeText}>{item.unanswered_count} POR RESPONDER</Text>
+                    </View>
+                  )}
+                  {item.standby_count > 0 && (
+                    <View style={[styles.badge, styles.badgeStandby]}>
+                      <Text style={styles.badgeText}>{item.standby_count} EM STANDBY</Text>
+                    </View>
+                  )}
                 </View>
-              ) : null}
+              )}
             </Pressable>
           );
         }}
@@ -95,8 +117,10 @@ export function DoctorPatientsScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
-  header: { flexDirection: 'row', alignItems: 'baseline', gap: spacing.sm, padding: spacing.lg },
+  header: { flexDirection: 'row', gap: spacing.xl, padding: spacing.lg, alignItems: 'flex-end' },
+  counterBlock: { flexDirection: 'row', alignItems: 'baseline', gap: spacing.sm },
   counter: { fontSize: fontSize.xl, fontWeight: '800', color: colors.unanswered },
+  counterStandby: { color: colors.standby },
   counterLabel: { fontSize: fontSize.base, color: colors.textMuted },
   listContent: { paddingHorizontal: spacing.md, paddingBottom: spacing.lg },
   row: {
@@ -113,14 +137,15 @@ const styles = StyleSheet.create({
   name: { fontSize: fontSize.base, fontWeight: '700', color: colors.text, flex: 1 },
   age: { fontWeight: '400', color: colors.textMuted, fontSize: fontSize.sm },
   sub: { fontSize: fontSize.sm, color: colors.textMuted, marginTop: 2 },
+  badges: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm },
   badge: {
     alignSelf: 'flex-start',
     backgroundColor: colors.unanswered,
     borderRadius: radius.pill,
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
-    marginTop: spacing.sm,
   },
+  badgeStandby: { backgroundColor: colors.standby },
   badgeText: { color: colors.white, fontSize: 12, fontWeight: '700' },
   empty: { textAlign: 'center', color: colors.textMuted, marginTop: spacing.xl },
 });

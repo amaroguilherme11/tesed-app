@@ -1,24 +1,35 @@
 import { Pressable, Text, StyleSheet } from 'react-native';
 import { colors, fontSize } from '@/theme';
 
-/** Botão de texto para o cabeçalho — bolha clara com texto cinza-escuro. */
+/**
+ * Botão de texto para o cabeçalho — bolha clara com texto cinza-escuro.
+ * `bg`/`color` permitem um estado destacado (ex.: standby ativo a âmbar).
+ */
 export function HeaderTextButton({
   label,
   onPress,
   disabled = false,
+  bg,
+  color,
 }: {
   label: string;
   onPress: () => void;
   disabled?: boolean;
+  bg?: string;
+  color?: string;
 }) {
   return (
     <Pressable
       onPress={disabled ? undefined : onPress}
       disabled={disabled}
       hitSlop={10}
-      style={({ pressed }) => [styles.btn, (pressed || disabled) && styles.pressed]}
+      style={({ pressed }) => [
+        styles.btn,
+        bg ? { backgroundColor: bg } : null,
+        (pressed || disabled) && styles.pressed,
+      ]}
     >
-      <Text style={styles.text}>{label}</Text>
+      <Text style={[styles.text, color ? { color } : null]}>{label}</Text>
     </Pressable>
   );
 }

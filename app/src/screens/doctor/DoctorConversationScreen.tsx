@@ -6,7 +6,7 @@ import { HeaderFilesButton } from '@/components/HeaderFilesButton';
 import { HeaderTextButton } from '@/components/HeaderTextButton';
 import { CONSULTA_CLOSED } from '@/components/ConsultationsList';
 import { markConversationReadDoctor } from '@/lib/doctorInbox';
-import { closeConsultation, reopenConsultation } from '@/lib/consultations';
+import { closeConsultation, reopenConsultation, toggleStandby } from '@/lib/consultations';
 import { confirmAction } from '@/lib/confirm';
 import { colors, fontSize, spacing } from '@/theme';
 
@@ -15,8 +15,11 @@ export function DoctorConversationScreen({ route, navigation }: any) {
   const { conversationId, patientName, patientPhone } = route.params;
   // Estado aberta/fechada — começa do parâmetro; muda ao fechar/reabrir.
   const [open, setOpen] = useState<boolean>(route.params?.isOpen ?? true);
+  const [standby, setStandby] = useState<boolean>(route.params?.isStandby ?? false);
   const [busy, setBusy] = useState(false);
   const [contactBarHeight, setContactBarHeight] = useState(0);
+  // O standby só faz sentido em consulta ABERTA e POR RESPONDER.
+  const canStandby = open && route.params?.status === 'unanswered';
 
   // Marca como lida pelo médico enquanto o chat está em foco.
   useFocusEffect(
@@ -57,6 +60,18 @@ export function DoctorConversationScreen({ route, navigation }: any) {
     }
   };
 
+  const onToggleStandby = async () => {
+    setBusy(true);
+    try {
+      await toggleStandby(conversationId);
+      setStandby((s) => !s);
+    } catch (e: any) {
+      Alert.alert('Não foi possível alterar o standby', e.message ?? 'Erro desconhecido.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   useLayoutEffect(() => {
     navigation.setOptions({
       title: patientName ?? 'Consulta',
@@ -70,6 +85,15 @@ export function DoctorConversationScreen({ route, navigation }: any) {
               })
             }
           />
+          {canStandby && (
+            <HeaderTextButton
+              label={standby ? 'Em standby' : 'Standby'}
+              onPress={onToggleStandby}
+              disabled={busy}
+              bg={standby ? colors.standby : undefined}
+              color={standby ? colors.white : undefined}
+            />
+          )}
           <HeaderTextButton
             label={open ? 'Fechar' : 'Reabrir'}
             onPress={open ? onClose : onReopen}
@@ -78,7 +102,7 @@ export function DoctorConversationScreen({ route, navigation }: any) {
         </View>
       ),
     });
-  }, [navigation, patientName, conversationId, open, busy]);
+  }, [navigation, patientName, conversationId, open, busy, standby, canStandby]);
 
   const callPatient = () => {
     if (!patientPhone) return;

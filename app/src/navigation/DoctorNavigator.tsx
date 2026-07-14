@@ -2,6 +2,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { View } from 'react-native';
 import { DoctorPatientsScreen } from '@/screens/doctor/DoctorPatientsScreen';
 import { DoctorConsultationsScreen } from '@/screens/doctor/DoctorConsultationsScreen';
+import { DoctorFamilyMembersScreen } from '@/screens/doctor/DoctorFamilyMembersScreen';
 import { DoctorConversationScreen } from '@/screens/doctor/DoctorConversationScreen';
 import { ConversationFilesScreen } from '@/screens/shared/ConversationFilesScreen';
 import { CodesScreen } from '@/screens/doctor/CodesScreen';
@@ -38,6 +39,11 @@ export function DoctorNavigator() {
             </View>
           ),
         })}
+      />
+      <Stack.Screen
+        name="DoctorFamilyMembers"
+        component={DoctorFamilyMembersScreen}
+        options={{ title: 'Família' }}
       />
       <Stack.Screen
         name="DoctorConsultations"

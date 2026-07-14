@@ -17,11 +17,13 @@ export type Consultation = {
   has_unread: boolean;
 };
 
-/** Uma consulta na perspetiva do TERAPEUTA (traz info do membro + fecho). */
+/** Uma consulta na perspetiva do TERAPEUTA (traz info do membro + fecho + standby). */
 export type DoctorConsultation = Consultation & {
   member_name: string | null;
   member_dob: string | null;
   closed_at: string | null;
+  /** "Em standby" — estado só do terapeuta (consulta aberta e por responder). */
+  is_standby: boolean;
 };
 
 /** Um paciente na lista do terapeuta, com flags para destacar por-responder. */
@@ -35,7 +37,10 @@ export type DoctorPatientOverview = {
   plan_type: 'individual' | 'family' | null;
   sub_active: boolean;
   open_count: number;
+  /** Consultas por responder (exclui as que estão em standby). */
   unanswered_count: number;
+  /** Consultas em standby. */
+  standby_count: number;
   needs_response: boolean;
   has_unread: boolean;
 };
@@ -100,6 +105,17 @@ export async function closeConsultation(conversationId: string): Promise<void> {
 /** Terapeuta reabre uma consulta fechada (se não houver outra aberta). */
 export async function reopenConsultation(conversationId: string): Promise<void> {
   const { error } = await supabase.rpc('reopen_consultation', {
+    p_conversation_id: conversationId,
+  });
+  if (error) throw error;
+}
+
+/**
+ * Terapeuta liga/desliga o "Em standby" de uma consulta. Só liga se a consulta
+ * estiver aberta e por responder; desliga sempre. Não afeta o lado do paciente.
+ */
+export async function toggleStandby(conversationId: string): Promise<void> {
+  const { error } = await supabase.rpc('toggle_standby', {
     p_conversation_id: conversationId,
   });
   if (error) throw error;

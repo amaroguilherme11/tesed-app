@@ -15,6 +15,8 @@ export const colors = {
   accent: '#00C2D1',
   /** Destaque de conversa NÃO respondida — central no produto. */
   unanswered: '#E8503A',
+  /** Estado "Em standby" (só terapeuta) — amarelo-alaranjado suave. */
+  standby: '#E8A13A',
   bg: '#F4F8F9',
   surface: '#FFFFFF',
   /** Texto principal — cinza-escuro oficial. */
