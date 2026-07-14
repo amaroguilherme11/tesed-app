@@ -5,6 +5,7 @@ import * as Linking from 'expo-linking';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { Profile } from '@/lib/types';
+import { getLang } from '@/i18n';
 import { registerForPush, unregisterForPush } from '@/lib/notifications';
 
 type AuthState = {
@@ -329,6 +330,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           consent: 'true',
           date_of_birth: dateOfBirth ?? '',
           phone: phone ?? '',
+          // Idioma do registo: fica no user_metadata (template de email) e é lido
+          // pelo handle_new_user para profiles.locale.
+          locale: getLang(),
         },
       },
     });

@@ -23,6 +23,13 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const EXPO_PUSH = 'https://exp.host/--/api/v2/push/send';
 
+// Textos localizados das notificações. Só o PACIENTE tem idioma escolhido
+// (profiles.locale); quando o destinatário é o MÉDICO, é sempre PT.
+const NOTIF = {
+  pt: { doctorReply: 'Nova resposta do terapeuta', about: (n: string) => ` (sobre ${n})` },
+  en: { doctorReply: 'New reply from your therapist', about: (n: string) => ` (about ${n})` },
+};
+
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
 
@@ -78,7 +85,14 @@ Deno.serve(async (req) => {
   const preview = (msg.body ?? '').toString().slice(0, 120);
 
   if (senderIsDoctor) {
-    // Para o paciente. Se a conversa for de um dependente, menciona o nome.
+    // Para o paciente → usa o idioma dele (profiles.locale).
+    const { data: rp } = await supabase
+      .from('profiles')
+      .select('locale')
+      .eq('id', recipientId)
+      .single();
+    const s = NOTIF[rp?.locale === 'en' ? 'en' : 'pt'];
+    // Se a conversa for de um dependente, menciona o nome.
     let aboutWhom = '';
     if (conv.member_id) {
       const { data: mp } = await supabase
@@ -86,9 +100,9 @@ Deno.serve(async (req) => {
         .select('full_name')
         .eq('id', conv.member_id)
         .single();
-      if (mp?.full_name) aboutWhom = ` (sobre ${mp.full_name})`;
+      if (mp?.full_name) aboutWhom = s.about(mp.full_name);
     }
-    title = 'Nova resposta do terapeuta';
+    title = s.doctorReply;
     body = `${preview}${aboutWhom}`;
   } else {
     // Para o médico. Identifica o paciente e, se aplicável, o membro.
