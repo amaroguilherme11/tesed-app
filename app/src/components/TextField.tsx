@@ -19,7 +19,9 @@ export function TextField({ label, style, ...rest }: Props) {
 }
 
 const styles = StyleSheet.create({
-  wrapper: { marginBottom: spacing.md },
+  // minWidth: 0 — na web os <input> têm largura mínima intrínseca e não
+  // encolhem num flex row (campos lado a lado transbordavam em ecrãs estreitos).
+  wrapper: { marginBottom: spacing.md, minWidth: 0 },
   label: {
     fontSize: fontSize.sm,
     color: colors.textMuted,
@@ -27,6 +29,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.display,
   },
   input: {
+    minWidth: 0, // idem — deixa o input encolher abaixo da largura intrínseca
     height: 52,
     borderWidth: 1,
     borderColor: colors.border,

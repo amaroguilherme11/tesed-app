@@ -117,6 +117,9 @@ const styles = StyleSheet.create({
   dialText: { fontSize: fontSize.base, color: colors.text, fontFamily: fonts.body },
   input: {
     flex: 1,
+    // Na web um <input> tem largura mínima intrínseca (~210px) e não encolhe
+    // dentro de um flex row — sem isto o campo saía do ecrã a 320px.
+    minWidth: 0,
     height: 52,
     borderWidth: 1,
     borderColor: colors.border,

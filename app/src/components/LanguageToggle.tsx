@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { Pressable, StyleSheet, Text, useWindowDimensions } from 'react-native';
 import { useI18n } from '@/i18n';
 import { colors, fontSize, fonts, spacing } from '@/theme';
 
@@ -9,11 +9,15 @@ import { colors, fontSize, fonts, spacing } from '@/theme';
  */
 export function LanguageToggle({ tint }: { tint?: string }) {
   const { lang, toggle } = useI18n();
+  // Em ecrãs muito estreitos o cabeçalho fica sem espaço (toggle + logo +
+  // botões) — encolhe o padding para nada sair do ecrã. Em normais nada muda.
+  const { width } = useWindowDimensions();
+  const tight = width < 360;
   return (
     <Pressable
       onPress={toggle}
       hitSlop={10}
-      style={styles.btn}
+      style={[styles.btn, tight && styles.btnTight]}
       accessibilityLabel="Change language / Mudar idioma"
     >
       <Text style={[styles.text, { color: tint ?? colors.primary }]}>
@@ -25,5 +29,6 @@ export function LanguageToggle({ tint }: { tint?: string }) {
 
 const styles = StyleSheet.create({
   btn: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
+  btnTight: { paddingHorizontal: spacing.xs },
   text: { fontSize: fontSize.base, fontFamily: fonts.display },
 });

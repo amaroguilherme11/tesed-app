@@ -6,6 +6,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -39,7 +40,8 @@ type MemberRow = {
 
 export function PatientHomeScreen({ navigation }: any) {
   const { session, profile } = useAuth();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const { width } = useWindowDimensions();
   const [sub, setSub] = useState<MySubscription | null>(null);
   const [members, setMembers] = useState<MemberProfile[]>([]);
   const [consultations, setConsultations] = useState<Consultation[]>([]);
@@ -71,7 +73,14 @@ export function PatientHomeScreen({ navigation }: any) {
   const isFamily = sub?.plan_type === 'family';
 
   useLayoutEffect(() => {
+    // Com o símbolo centrado, em ecrãs estreitos os botões à direita ficavam
+    // POR CIMA do logótipo (o contentor direito transborda sobre o título).
+    // Abaixo do limiar (medido; EN tem rótulos mais largos) o título passa a
+    // alinhar à esquerda — em fluxo normal nada se sobrepõe. Em ecrãs normais
+    // mantém-se centrado. No iOS a opção é ignorada (o sistema já resolve).
+    const centerFits = width >= (lang === 'en' ? 460 : 360);
     navigation.setOptions({
+      headerTitleAlign: centerFits ? 'center' : 'left',
       headerLeft: () => <LanguageToggle tint={colors.white} />,
       headerRight: () => (
         <View style={styles.headerRow}>
@@ -80,7 +89,7 @@ export function PatientHomeScreen({ navigation }: any) {
         </View>
       ),
     });
-  }, [navigation, t]);
+  }, [navigation, t, lang, width]);
 
   // Abre uma consulta (do titular, no plano individual) no chat.
   const openMine = (c: Consultation) => {

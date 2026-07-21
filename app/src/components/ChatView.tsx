@@ -296,6 +296,9 @@ const styles = StyleSheet.create({
   attachIcon: { fontSize: fontSize.lg },
   input: {
     flex: 1,
+    // Na web o <textarea> tem largura mínima intrínseca e não encolhe no flex
+    // row do compositor — sem isto o botão Enviar saía do ecrã a 320px.
+    minWidth: 0,
     maxHeight: 120,
     minHeight: 44,
     borderWidth: 1,
