@@ -82,7 +82,10 @@ export type MemberProfile = {
 
 export type AdminMetrics = {
   conversations_total: number;
+  /** Por responder: abertas, por responder e SEM standby. */
   conversations_unanswered: number;
+  /** Em standby: abertas, por responder e COM standby (só terapeuta). */
+  conversations_standby: number;
   conversations_answered: number;
   patients_total: number;
   subscriptions_active: number;

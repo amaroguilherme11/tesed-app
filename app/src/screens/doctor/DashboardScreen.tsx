@@ -88,6 +88,7 @@ export function DashboardScreen({ navigation }: any) {
         <Stat label="Total" value={metrics.conversations_total} />
         <Stat label="Respondidas" value={metrics.conversations_answered} />
         <Stat label="Por responder" value={metrics.conversations_unanswered} highlight />
+        <Stat label="Em standby" value={metrics.conversations_standby} color={colors.standby} />
         <Stat label="Mensagens (total)" value={metrics.messages_total} />
       </Section>
 
@@ -120,11 +121,24 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function Stat({ label, value, highlight }: { label: string; value: number; highlight?: boolean }) {
+function Stat({
+  label,
+  value,
+  highlight,
+  color,
+}: {
+  label: string;
+  value: number;
+  highlight?: boolean;
+  /** Cor própria do valor (ex.: âmbar do standby). Sobrepõe-se ao highlight. */
+  color?: string;
+}) {
   return (
     <View style={styles.statRow}>
       <Text style={styles.statLabel}>{label}</Text>
-      <Text style={[styles.statValue, highlight && styles.statValueHighlight]}>{value}</Text>
+      <Text style={[styles.statValue, highlight && styles.statValueHighlight, color ? { color } : null]}>
+        {value}
+      </Text>
     </View>
   );
 }

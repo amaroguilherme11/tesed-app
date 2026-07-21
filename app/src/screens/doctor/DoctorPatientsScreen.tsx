@@ -29,8 +29,10 @@ export function DoctorPatientsScreen({ navigation }: any) {
     );
   }
 
-  const needCount = patients.filter((p) => p.needs_response).length;
-  const standbyCount = patients.filter((p) => p.standby_count > 0).length;
+  // Os contadores do topo contam CONSULTAS (soma de todos os pacientes), para
+  // serem coerentes com os badges de cada linha e com o Painel.
+  const needCount = patients.reduce((n, p) => n + p.unanswered_count, 0);
+  const standbyCount = patients.reduce((n, p) => n + p.standby_count, 0);
 
   // Família → seletor de membros (drill-down); individual → consultas diretas.
   const open = (p: DoctorPatientOverview) =>
