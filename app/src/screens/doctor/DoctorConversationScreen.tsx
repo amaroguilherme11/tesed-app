@@ -4,6 +4,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { ChatView } from '@/components/ChatView';
 import { HeaderFilesButton } from '@/components/HeaderFilesButton';
 import { HeaderTextButton } from '@/components/HeaderTextButton';
+import { HeaderBackHome } from '@/components/HeaderBackHome';
 import { CONSULTA_CLOSED } from '@/components/ConsultationsList';
 import { markConversationReadDoctor } from '@/lib/doctorInbox';
 import { closeConsultation, reopenConsultation, toggleStandby } from '@/lib/consultations';
@@ -75,6 +76,11 @@ export function DoctorConversationScreen({ route, navigation }: any) {
   useLayoutEffect(() => {
     navigation.setOptions({
       title: patientName ?? 'Consulta',
+      // Voltar + atalho de INÍCIO (volta direto à lista de pacientes, sem ter
+      // de passar pelos ecrãs intermédios).
+      headerLeft: () => (
+        <HeaderBackHome onBack={() => navigation.goBack()} onHome={() => navigation.popToTop()} />
+      ),
       headerRight: () => (
         <View style={styles.headerRow}>
           <HeaderFilesButton
