@@ -80,6 +80,23 @@ export async function getDoctorPatients(): Promise<DoctorPatientOverview[]> {
   return (data ?? []) as DoctorPatientOverview[];
 }
 
+/**
+ * Terapeuta abre uma consulta com um paciente (memberId=null = titular; ou o id
+ * do dependente). Não exige subscrição ativa; mantém "uma aberta por (paciente,
+ * membro)". Devolve o id da conversa criada.
+ */
+export async function doctorCreateConsultation(
+  patientId: string,
+  memberId: string | null,
+): Promise<{ id: string; status: 'answered' | 'unanswered' }> {
+  const { data, error } = await supabase.rpc('doctor_create_consultation', {
+    p_patient_id: patientId,
+    p_member_id: memberId,
+  });
+  if (error) throw error;
+  return data as { id: string; status: 'answered' | 'unanswered' };
+}
+
 /** Todas as consultas de um paciente (todos os dependentes). Abertas no topo. */
 export async function getDoctorPatientConsultations(
   patientId: string,

@@ -1,7 +1,12 @@
 import { useCallback, useLayoutEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { DoctorConsultation, getDoctorPatientConsultations } from '@/lib/consultations';
+import {
+  DoctorConsultation,
+  doctorCreateConsultation,
+  getDoctorPatientConsultations,
+} from '@/lib/consultations';
+import { Button } from '@/components/Button';
 import { colors, fontSize, radius, shadow, spacing } from '@/theme';
 
 function relativeTime(iso: string | null): string {
@@ -29,6 +34,7 @@ export function DoctorConsultationsScreen({ route, navigation }: any) {
   const { patientId, patientName, patientPhone, memberId, filterMember, title } = route.params;
   const [items, setItems] = useState<DoctorConsultation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
 
   const load = useCallback(async () => {
     let list = await getDoctorPatientConsultations(patientId);
@@ -58,6 +64,30 @@ export function DoctorConsultationsScreen({ route, navigation }: any) {
       status: c.status,
       isStandby: c.is_standby,
     });
+
+  // Só pode existir UMA consulta aberta por (paciente, membro): o botão de abrir
+  // só aparece quando não há nenhuma aberta na vista atual.
+  const hasOpen = items.some((c) => c.is_open);
+
+  const onNew = async () => {
+    setCreating(true);
+    try {
+      const conv = await doctorCreateConsultation(patientId, memberId ?? null);
+      await load();
+      navigation.navigate('Conversation', {
+        conversationId: conv.id,
+        patientName: title ?? patientName,
+        patientPhone,
+        isOpen: true,
+        status: conv.status,
+        isStandby: false,
+      });
+    } catch (e: any) {
+      Alert.alert('Não foi possível abrir', e.message ?? 'Erro desconhecido.');
+    } finally {
+      setCreating(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -106,6 +136,13 @@ export function DoctorConsultationsScreen({ route, navigation }: any) {
         );
       }}
       contentContainerStyle={styles.listContent}
+      ListHeaderComponent={
+        !hasOpen ? (
+          <View style={styles.newWrap}>
+            <Button title="Nova consulta" onPress={onNew} loading={creating} />
+          </View>
+        ) : null
+      }
       ListEmptyComponent={<Text style={styles.empty}>Sem consultas.</Text>}
     />
   );
@@ -114,6 +151,7 @@ export function DoctorConsultationsScreen({ route, navigation }: any) {
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
   listContent: { padding: spacing.md },
+  newWrap: { marginBottom: spacing.md },
   row: {
     backgroundColor: colors.surface,
     borderRadius: radius.base,
