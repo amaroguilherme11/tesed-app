@@ -4,6 +4,7 @@ import { ActivityIndicator, View } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/i18n';
 import { LanguageToggle } from '@/components/LanguageToggle';
+import { HeaderHelpButton } from '@/components/HeaderHelpButton';
 import { colors } from '@/theme';
 
 // Auth
@@ -11,6 +12,7 @@ import { LoginScreen } from '@/screens/auth/LoginScreen';
 import { RegisterScreen } from '@/screens/auth/RegisterScreen';
 import { ForgotPasswordScreen } from '@/screens/auth/ForgotPasswordScreen';
 import { ResetPasswordScreen } from '@/screens/auth/ResetPasswordScreen';
+import { GuideScreen } from '@/screens/patient/GuideScreen';
 
 // Navegadores por papel
 import { PatientNavigator } from '@/navigation/PatientNavigator';
@@ -68,13 +70,22 @@ export function RootNavigator() {
     <NavigationContainer documentTitle={documentTitle}>
       {!session ? (
         <Stack.Navigator screenOptions={authScreenOptions}>
-          <Stack.Screen name="Login" component={LoginScreen} options={{ title: t.nav.login }} />
+          <Stack.Screen
+            name="Login"
+            component={LoginScreen}
+            options={({ navigation }: any) => ({
+              title: t.nav.login,
+              // "?" no login → guia (útil antes de sequer ter conta).
+              headerLeft: () => <HeaderHelpButton onPress={() => navigation.navigate('Guide')} />,
+            })}
+          />
           <Stack.Screen name="Register" component={RegisterScreen} options={{ title: t.nav.register }} />
           <Stack.Screen
             name="ForgotPassword"
             component={ForgotPasswordScreen}
             options={{ title: t.nav.forgotPassword }}
           />
+          <Stack.Screen name="Guide" component={GuideScreen} options={{ title: t.nav.guide }} />
         </Stack.Navigator>
       ) : profile?.role === 'doctor' ? (
         <DoctorNavigator />

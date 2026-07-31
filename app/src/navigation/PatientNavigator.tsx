@@ -5,6 +5,7 @@ import { PatientChatScreen } from '@/screens/patient/PatientChatScreen';
 import { AddMemberScreen } from '@/screens/patient/AddMemberScreen';
 import { ConversationFilesScreen } from '@/screens/shared/ConversationFilesScreen';
 import { SubscriptionScreen } from '@/screens/patient/SubscriptionScreen';
+import { GuideScreen } from '@/screens/patient/GuideScreen';
 import { HeaderLogo } from '@/components/HeaderLogo';
 import { useI18n } from '@/i18n';
 import { colors } from '@/theme';
@@ -57,6 +58,11 @@ export function PatientNavigator() {
         name="Subscription"
         component={SubscriptionScreen}
         options={{ title: t.nav.subscription }}
+      />
+      <Stack.Screen
+        name="Guide"
+        component={GuideScreen}
+        options={{ title: t.nav.guide }}
       />
     </Stack.Navigator>
   );

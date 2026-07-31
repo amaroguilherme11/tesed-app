@@ -26,6 +26,7 @@ import { useI18n } from '@/i18n';
 import { HeaderTextButton } from '@/components/HeaderTextButton';
 import { HeaderSignOutButton } from '@/components/HeaderSignOutButton';
 import { LanguageToggle } from '@/components/LanguageToggle';
+import { HeaderHelpButton } from '@/components/HeaderHelpButton';
 import { MemberProfile, MySubscription } from '@/lib/types';
 import { colors, spacing, fontSize, radius, shadow } from '@/theme';
 
@@ -81,7 +82,12 @@ export function PatientHomeScreen({ navigation }: any) {
     const centerFits = width >= (lang === 'en' ? 460 : 360);
     navigation.setOptions({
       headerTitleAlign: centerFits ? 'center' : 'left',
-      headerLeft: () => <LanguageToggle tint={colors.white} />,
+      headerLeft: () => (
+        <View style={styles.headerRow}>
+          <LanguageToggle tint={colors.white} />
+          <HeaderHelpButton onPress={() => navigation.navigate('Guide')} />
+        </View>
+      ),
       headerRight: () => (
         <View style={styles.headerRow}>
           <HeaderTextButton label={t.home.manage} onPress={() => navigation.navigate('Subscription')} />

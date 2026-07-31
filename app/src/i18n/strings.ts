@@ -19,6 +19,8 @@ export const pt = {
     confirm: 'Confirmar',
     remove: 'Remover',
     unknownError: 'Erro desconhecido.',
+    show: 'Mostrar',
+    hide: 'Ocultar',
   },
   signOut: {
     button: 'Sair',
@@ -35,6 +37,7 @@ export const pt = {
     addMember: 'Adicionar membro',
     files: 'Ficheiros',
     subscription: 'Subscrição',
+    guide: 'Como usar a app',
   },
   auth: {
     tagline: 'Comunicação com o seu terapeuta, sem se perder nada.',
@@ -200,6 +203,51 @@ export const pt = {
     months: 'meses',
     newborn: 'recém-nascido',
   },
+  guide: {
+    title: 'Como usar a Tesed',
+    subtitle: 'Um guia rápido, passo a passo.',
+    steps: [
+      {
+        title: 'Criar conta',
+        caption:
+          'Abre a app, toca em «Criar conta de paciente» e preenche os teus dados. Depois confirma o email que recebes para ativar a conta.',
+      },
+      {
+        title: 'Ativar a subscrição',
+        caption:
+          'Toca em «Gestão» e depois em «Inserir código». Escreve o código que recebeste (na compra ou em consulta) para ativares a subscrição.',
+      },
+      {
+        title: 'Abrir uma consulta',
+        caption:
+          'No ecrã principal, toca em «Nova consulta» para começares a falar com o teu terapeuta. Só podes ter uma consulta aberta de cada vez.',
+      },
+      {
+        title: 'Escrever e enviar',
+        caption:
+          'Escreve a mensagem e toca em «Enviar». Para enviares uma foto ou ficheiro, toca no «＋» à esquerda. Recebes uma notificação quando o terapeuta responder.',
+      },
+      {
+        title: 'Consulta fechada',
+        caption:
+          'Quando o terapeuta fecha a consulta, podes continuar a ler o histórico, mas não enviar. Abre uma nova sempre que precisares.',
+      },
+      {
+        title: 'Plano família',
+        caption:
+          'No plano família, no ecrã principal escolhes de quem é a consulta (tu ou um dependente). Cada pessoa tem o seu próprio chat.',
+      },
+      {
+        title: 'Adicionar um membro',
+        caption:
+          'Toca em «＋ Adicionar membro», escreve o nome e a data de nascimento. O novo membro passa a aparecer na lista da família.',
+      },
+      {
+        title: 'Trocar de idioma',
+        caption: 'Toca no «🌐» no canto superior para alternar entre português e inglês.',
+      },
+    ],
+  },
   dates: {
     today: 'Hoje',
     yesterday: 'Ontem',
@@ -213,6 +261,8 @@ export const en: typeof pt = {
     confirm: 'Confirm',
     remove: 'Remove',
     unknownError: 'Unknown error.',
+    show: 'Show',
+    hide: 'Hide',
   },
   signOut: {
     button: 'Log out',
@@ -229,6 +279,7 @@ export const en: typeof pt = {
     addMember: 'Add family member',
     files: 'Files',
     subscription: 'Subscription',
+    guide: 'How to use the app',
   },
   auth: {
     tagline: 'Talk to your therapist, without missing a thing.',
@@ -393,6 +444,51 @@ export const en: typeof pt = {
     month: 'month',
     months: 'months',
     newborn: 'newborn',
+  },
+  guide: {
+    title: 'How to use Tesed',
+    subtitle: 'A quick, step-by-step guide.',
+    steps: [
+      {
+        title: 'Create account',
+        caption:
+          'Open the app, tap “Create patient account” and fill in your details. Then confirm the email you receive to activate the account.',
+      },
+      {
+        title: 'Activate your subscription',
+        caption:
+          'Tap “Account”, then “Enter code”. Type the code you received (with your purchase or in a consultation) to activate your subscription.',
+      },
+      {
+        title: 'Start a consultation',
+        caption:
+          'On the home screen, tap “New consultation” to start talking to your therapist. You can only have one open consultation at a time.',
+      },
+      {
+        title: 'Write and send',
+        caption:
+          'Type your message and tap “Send”. To send a photo or file, tap the “＋” on the left. You get a notification when the therapist replies.',
+      },
+      {
+        title: 'Closed consultation',
+        caption:
+          'When the therapist closes a consultation, you can still read the history but not send messages. Open a new one whenever you need.',
+      },
+      {
+        title: 'Family plan',
+        caption:
+          'On a family plan, choose whose consultation it is (you or a dependent) on the home screen. Each person has their own chat.',
+      },
+      {
+        title: 'Add a member',
+        caption:
+          'Tap “＋ Add family member”, enter the name and date of birth. The new member then appears in your family list.',
+      },
+      {
+        title: 'Change language',
+        caption: 'Tap the “🌐” in the top corner to switch between Portuguese and English.',
+      },
+    ],
   },
   dates: {
     today: 'Today',
