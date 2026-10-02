@@ -47,6 +47,7 @@ export function DoctorPatientsScreen({ navigation }: any) {
           patientId: p.patient_id,
           patientName: p.full_name ?? 'Paciente',
           patientPhone: p.phone,
+          patientDob: p.date_of_birth,
         });
 
   return (
@@ -111,6 +112,14 @@ export function DoctorPatientsScreen({ navigation }: any) {
         ListEmptyComponent={
           <Text style={styles.empty}>Ainda não há pacientes com subscrição.</Text>
         }
+        ListFooterComponent={
+          <Pressable
+            onPress={() => navigation.navigate('DoctorDeletedAccounts')}
+            style={styles.footerLink}
+          >
+            <Text style={styles.footerLinkText}>Contas apagadas (recuperar)</Text>
+          </Pressable>
+        }
       />
     </View>
   );
@@ -150,4 +159,6 @@ const styles = StyleSheet.create({
   badgeStandby: { backgroundColor: colors.standby },
   badgeText: { color: colors.white, fontSize: 12, fontWeight: '700' },
   empty: { textAlign: 'center', color: colors.textMuted, marginTop: spacing.xl },
+  footerLink: { paddingVertical: spacing.lg, alignItems: 'center' },
+  footerLinkText: { color: colors.textMuted, fontSize: fontSize.sm, fontWeight: '600', textDecorationLine: 'underline' },
 });

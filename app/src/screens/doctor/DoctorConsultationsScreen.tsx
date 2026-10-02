@@ -6,7 +6,10 @@ import {
   doctorCreateConsultation,
   getDoctorPatientConsultations,
 } from '@/lib/consultations';
+import { doctorSoftDeletePatient, doctorSoftDeleteMember } from '@/lib/doctorProfiles';
+import { confirmAction } from '@/lib/confirm';
 import { Button } from '@/components/Button';
+import { HeaderMoreButton, OverlayMenu } from '@/components/HeaderMenu';
 import { colors, fontSize, radius, shadow, spacing } from '@/theme';
 
 function relativeTime(iso: string | null): string {
@@ -26,15 +29,31 @@ function fmtDate(iso: string): string {
 
 /**
  * Consultas de um paciente (individual) OU de UM membro da família (drill-down).
- * route.params = { patientId, patientName, patientPhone?, memberId?, filterMember?, title? }
+ * route.params = { patientId, patientName, patientPhone?, patientDob?, memberId?,
+ *   memberName?, memberDob?, filterMember?, title? }
  * - filterMember=true (família): mostra só as consultas de `memberId` (null = titular).
  * - sem filterMember (individual): mostra todas (que são só do titular).
+ * O menu "⋯" edita/apaga o alvo do ecrã: o MEMBRO (drill-down) ou o TITULAR.
  */
 export function DoctorConsultationsScreen({ route, navigation }: any) {
-  const { patientId, patientName, patientPhone, memberId, filterMember, title } = route.params;
+  const {
+    patientId,
+    patientName,
+    patientPhone,
+    patientDob,
+    memberId,
+    memberName,
+    memberDob,
+    filterMember,
+    title,
+  } = route.params;
   const [items, setItems] = useState<DoctorConsultation[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Alvo da edição/apagamento: o membro (se estamos no drill-down) ou o titular.
+  const isMember = !!(filterMember && memberId);
 
   const load = useCallback(async () => {
     let list = await getDoctorPatientConsultations(patientId);
@@ -52,8 +71,41 @@ export function DoctorConsultationsScreen({ route, navigation }: any) {
   );
 
   useLayoutEffect(() => {
-    navigation.setOptions({ title: title ?? patientName ?? 'Paciente' });
+    navigation.setOptions({
+      title: title ?? patientName ?? 'Paciente',
+      headerRight: () => <HeaderMoreButton onPress={() => setMenuOpen(true)} />,
+    });
   }, [navigation, title, patientName]);
+
+  const goEdit = () =>
+    navigation.navigate('DoctorEditProfile',
+      isMember
+        ? { kind: 'member', id: memberId, fullName: memberName ?? title ?? null, dob: memberDob ?? null, phone: null }
+        : { kind: 'patient', id: patientId, fullName: patientName ?? null, dob: patientDob ?? null, phone: patientPhone ?? null },
+    );
+
+  const onDelete = () =>
+    confirmAction({
+      title: isMember ? 'Apagar membro' : 'Apagar conta',
+      message: isMember
+        ? `Apagar o membro ${memberName ?? title ?? ''}? Pode ser restaurado em 30 dias.`
+        : `Apagar a conta de ${patientName ?? ''}? A pessoa deixa de conseguir entrar. Pode ser restaurada em 30 dias.`,
+      confirmLabel: 'Apagar',
+      destructive: true,
+      onConfirm: async () => {
+        try {
+          if (isMember) {
+            await doctorSoftDeleteMember(memberId);
+            navigation.goBack();
+          } else {
+            await doctorSoftDeletePatient(patientId);
+            navigation.popToTop();
+          }
+        } catch (e: any) {
+          Alert.alert('Erro', e.message ?? 'Não foi possível apagar.');
+        }
+      },
+    });
 
   const open = (c: DoctorConsultation) =>
     navigation.navigate('Conversation', {
@@ -98,57 +150,69 @@ export function DoctorConsultationsScreen({ route, navigation }: any) {
   }
 
   return (
-    <FlatList
-      data={items}
-      keyExtractor={(c) => c.conversation_id}
-      renderItem={({ item }) => {
-        const unanswered = item.is_open && item.status === 'unanswered' && !item.is_standby;
-        return (
-          <Pressable
-            onPress={() => open(item)}
-            style={({ pressed }) => [
-              styles.row,
-              !item.is_open && styles.rowClosed,
-              pressed && styles.rowPressed,
-            ]}
-          >
-            <View style={styles.rowMain}>
-              <View style={styles.nameRow}>
-                {item.has_unread && <View style={styles.unreadDot} />}
-                <Text style={styles.date}>Consulta de {fmtDate(item.created_at)}</Text>
+    <View style={styles.flex}>
+      <FlatList
+        data={items}
+        keyExtractor={(c) => c.conversation_id}
+        renderItem={({ item }) => {
+          const unanswered = item.is_open && item.status === 'unanswered' && !item.is_standby;
+          return (
+            <Pressable
+              onPress={() => open(item)}
+              style={({ pressed }) => [
+                styles.row,
+                !item.is_open && styles.rowClosed,
+                pressed && styles.rowPressed,
+              ]}
+            >
+              <View style={styles.rowMain}>
+                <View style={styles.nameRow}>
+                  {item.has_unread && <View style={styles.unreadDot} />}
+                  <Text style={styles.date}>Consulta de {fmtDate(item.created_at)}</Text>
+                </View>
+                <Text style={styles.time}>{relativeTime(item.last_message_at)}</Text>
               </View>
-              <Text style={styles.time}>{relativeTime(item.last_message_at)}</Text>
+              {!item.is_open ? (
+                <Text style={styles.closed}>Fechada</Text>
+              ) : item.is_standby ? (
+                <View style={[styles.badge, styles.badgeStandby]}>
+                  <Text style={styles.badgeText}>EM STANDBY</Text>
+                </View>
+              ) : unanswered ? (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>POR RESPONDER</Text>
+                </View>
+              ) : (
+                <Text style={styles.answered}>Aberta · respondida</Text>
+              )}
+            </Pressable>
+          );
+        }}
+        contentContainerStyle={styles.listContent}
+        ListHeaderComponent={
+          !hasOpen ? (
+            <View style={styles.newWrap}>
+              <Button title="Nova consulta" onPress={onNew} loading={creating} />
             </View>
-            {!item.is_open ? (
-              <Text style={styles.closed}>Fechada</Text>
-            ) : item.is_standby ? (
-              <View style={[styles.badge, styles.badgeStandby]}>
-                <Text style={styles.badgeText}>EM STANDBY</Text>
-              </View>
-            ) : unanswered ? (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>POR RESPONDER</Text>
-              </View>
-            ) : (
-              <Text style={styles.answered}>Aberta · respondida</Text>
-            )}
-          </Pressable>
-        );
-      }}
-      contentContainerStyle={styles.listContent}
-      ListHeaderComponent={
-        !hasOpen ? (
-          <View style={styles.newWrap}>
-            <Button title="Nova consulta" onPress={onNew} loading={creating} />
-          </View>
-        ) : null
-      }
-      ListEmptyComponent={<Text style={styles.empty}>Sem consultas.</Text>}
-    />
+          ) : null
+        }
+        ListEmptyComponent={<Text style={styles.empty}>Sem consultas.</Text>}
+      />
+
+      <OverlayMenu
+        visible={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        items={[
+          { label: isMember ? 'Editar membro' : 'Editar dados', onPress: goEdit },
+          { label: isMember ? 'Apagar membro' : 'Apagar conta', danger: true, onPress: onDelete },
+        ]}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
   listContent: { padding: spacing.md },
   newWrap: { marginBottom: spacing.md },

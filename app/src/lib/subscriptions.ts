@@ -41,6 +41,24 @@ export async function createFreeCode(planType: PlanType): Promise<SubscriptionCo
   return data as SubscriptionCode;
 }
 
+/**
+ * MÉDICO: gera um código com plano + duração (3/6/12 meses) à escolha, grátis
+ * (consulta) ou pago (dinheiro/outra forma fora do website). Devolve o código.
+ */
+export async function createCode(
+  planType: PlanType,
+  months: 3 | 6 | 12,
+  paid: boolean,
+): Promise<SubscriptionCode> {
+  const { data, error } = await supabase.rpc('create_code', {
+    p_plan_type: planType,
+    p_duration_months: months,
+    p_paid: paid,
+  });
+  if (error) throw error;
+  return data as SubscriptionCode;
+}
+
 /** MÉDICO: revoga um código ativo. */
 export async function revokeCode(codeId: string): Promise<void> {
   const { error } = await supabase.rpc('revoke_code', { p_code_id: codeId });

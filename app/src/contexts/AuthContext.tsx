@@ -298,6 +298,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [session, profile, recoveringPassword]);
 
+  // Conta apagada pelo terapeuta (soft-delete): termina a sessão imediatamente.
+  // O ban (auth.users.banned_until) já impede novos logins/renovações; isto fecha
+  // a janela de uma sessão ainda ativa, assim que o perfil fresco chega.
+  useEffect(() => {
+    if (profile?.deleted_at) {
+      if (session) AsyncStorage.removeItem(profileCacheKey(session.user.id)).catch(() => {});
+      supabase.auth.signOut().catch(() => {});
+    }
+  }, [profile, session]);
+
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;

@@ -11,18 +11,26 @@ import {
 import * as Clipboard from 'expo-clipboard';
 import { Button } from '@/components/Button';
 import { confirmAction } from '@/lib/confirm';
-import { createFreeCode, listCodes, revokeCode } from '@/lib/subscriptions';
+import { createCode, listCodes, revokeCode } from '@/lib/subscriptions';
 import { PlanType, SubscriptionCode } from '@/lib/types';
 import { colors, fontSize, radius, shadow, spacing } from '@/theme';
 
+type Months = 3 | 6 | 12;
+
 /**
- * Ecrã do MÉDICO (admin): gerar códigos grátis (3 meses) e gerir a tabela
- * de códigos (listar, revogar). Códigos pagos chegam pelo website (Fase 5).
+ * Ecrã do TERAPEUTA (admin): gerar códigos (plano + duração 3/6/12 + grátis/pago)
+ * e gerir a tabela de códigos (listar, revogar). "Pago" = pago em consulta /
+ * dinheiro / outra forma fora do website. Códigos do website chegam pela Fase 5.
  */
 export function CodesScreen() {
   const [codes, setCodes] = useState<SubscriptionCode[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+
+  // Escolhas do gerador.
+  const [plan, setPlan] = useState<PlanType>('individual');
+  const [months, setMonths] = useState<Months>(3);
+  const [paid, setPaid] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -34,14 +42,16 @@ export function CodesScreen() {
     load();
   }, [load]);
 
-  const onCreate = async (plan: PlanType) => {
+  const onCreate = async () => {
     setCreating(true);
     try {
-      const created = await createFreeCode(plan);
+      const created = await createCode(plan, months, paid);
       await load();
       Alert.alert(
         'Código criado',
-        `${created.code}\n\nPlano ${plan === 'family' ? 'família' : 'individual'}, 3 meses.\nEntrega-o ao paciente.`
+        `${created.code}\n\nPlano ${plan === 'family' ? 'família' : 'individual'}, ${months} meses, ${
+          paid ? 'pago' : 'grátis'
+        }.\nEntrega-o ao paciente.`,
       );
     } catch (e: any) {
       Alert.alert('Erro', e.message ?? 'Não foi possível criar o código.');
@@ -70,14 +80,41 @@ export function CodesScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.actions}>
-        <Text style={styles.title}>Gerar código grátis (3 meses)</Text>
-        <View style={styles.btnRow}>
-          <View style={styles.flex}>
-            <Button title="Individual" onPress={() => onCreate('individual')} loading={creating} />
-          </View>
-          <View style={styles.flex}>
-            <Button title="Família" onPress={() => onCreate('family')} loading={creating} />
-          </View>
+        <Text style={styles.title}>Gerar código</Text>
+
+        <Text style={styles.segLabel}>Plano</Text>
+        <Seg
+          options={[
+            { key: 'individual', label: 'Individual' },
+            { key: 'family', label: 'Família' },
+          ]}
+          value={plan}
+          onChange={(v) => setPlan(v as PlanType)}
+        />
+
+        <Text style={styles.segLabel}>Duração</Text>
+        <Seg
+          options={[
+            { key: '3', label: '3 meses' },
+            { key: '6', label: '6 meses' },
+            { key: '12', label: '12 meses' },
+          ]}
+          value={String(months)}
+          onChange={(v) => setMonths(Number(v) as Months)}
+        />
+
+        <Text style={styles.segLabel}>Tipo</Text>
+        <Seg
+          options={[
+            { key: 'free', label: 'Grátis (consulta)' },
+            { key: 'paid', label: 'Pago' },
+          ]}
+          value={paid ? 'paid' : 'free'}
+          onChange={(v) => setPaid(v === 'paid')}
+        />
+
+        <View style={styles.generateWrap}>
+          <Button title="Gerar código" onPress={onCreate} loading={creating} />
         </View>
       </View>
 
@@ -94,6 +131,34 @@ export function CodesScreen() {
           ListEmptyComponent={<Text style={styles.empty}>Ainda não há códigos.</Text>}
         />
       )}
+    </View>
+  );
+}
+
+/** Seletor segmentado simples (uma linha de pílulas). */
+function Seg({
+  options,
+  value,
+  onChange,
+}: {
+  options: { key: string; label: string }[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <View style={styles.seg}>
+      {options.map((o) => {
+        const active = o.key === value;
+        return (
+          <Pressable
+            key={o.key}
+            onPress={() => onChange(o.key)}
+            style={[styles.segItem, active && styles.segItemActive]}
+          >
+            <Text style={[styles.segText, active && styles.segTextActive]}>{o.label}</Text>
+          </Pressable>
+        );
+      })}
     </View>
   );
 }
@@ -151,7 +216,20 @@ const styles = StyleSheet.create({
   center: { paddingTop: spacing.xl, alignItems: 'center' },
   actions: { padding: spacing.md },
   title: { fontSize: fontSize.base, fontWeight: '700', color: colors.text, marginBottom: spacing.sm },
-  btnRow: { flexDirection: 'row', gap: spacing.sm },
+  segLabel: { fontSize: fontSize.sm, color: colors.textMuted, marginTop: spacing.sm, marginBottom: spacing.xs },
+  seg: { flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' },
+  segItem: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  segItemActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  segText: { fontSize: fontSize.sm, color: colors.text, fontWeight: '600' },
+  segTextActive: { color: colors.white },
+  generateWrap: { marginTop: spacing.lg },
   listContent: { padding: spacing.md, paddingTop: 0 },
   empty: { textAlign: 'center', color: colors.textMuted, marginTop: spacing.xl },
   row: {

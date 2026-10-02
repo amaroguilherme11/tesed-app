@@ -1,14 +1,18 @@
 import { useCallback, useLayoutEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { DoctorConsultation, getDoctorPatientConsultations } from '@/lib/consultations';
+import { doctorSoftDeletePatient } from '@/lib/doctorProfiles';
+import { confirmAction } from '@/lib/confirm';
+import { HeaderMoreButton, OverlayMenu } from '@/components/HeaderMenu';
 import { formatAge } from '@/lib/age';
 import { colors, fontSize, radius, shadow, spacing } from '@/theme';
 
 /**
  * Vista de FAMÍLIA do terapeuta: lista de membros (titular + dependentes COM
  * consultas). Tocar num membro abre as consultas SÓ desse membro (drill-down),
- * evitando o clutter de ver tudo junto.
+ * evitando o clutter de ver tudo junto. O menu "⋯" edita/apaga o TITULAR
+ * (os membros editam-se/apagam-se no drill-down de cada um).
  * route.params = { patientId, patientName, patientPhone?, patientDob? }
  */
 type MemberRow = {
@@ -24,6 +28,7 @@ export function DoctorFamilyMembersScreen({ route, navigation }: any) {
   const { patientId, patientName, patientPhone, patientDob } = route.params;
   const [items, setItems] = useState<DoctorConsultation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const load = useCallback(async () => {
     setItems(await getDoctorPatientConsultations(patientId));
@@ -37,8 +42,36 @@ export function DoctorFamilyMembersScreen({ route, navigation }: any) {
   );
 
   useLayoutEffect(() => {
-    navigation.setOptions({ title: patientName ?? 'Família' });
+    navigation.setOptions({
+      title: patientName ?? 'Família',
+      headerRight: () => <HeaderMoreButton onPress={() => setMenuOpen(true)} />,
+    });
   }, [navigation, patientName]);
+
+  const goEditTitular = () =>
+    navigation.navigate('DoctorEditProfile', {
+      kind: 'patient',
+      id: patientId,
+      fullName: patientName ?? null,
+      dob: patientDob ?? null,
+      phone: patientPhone ?? null,
+    });
+
+  const onDeleteTitular = () =>
+    confirmAction({
+      title: 'Apagar conta',
+      message: `Apagar a conta de ${patientName ?? ''} (e toda a família)? A pessoa deixa de conseguir entrar. Pode ser restaurada em 30 dias.`,
+      confirmLabel: 'Apagar',
+      destructive: true,
+      onConfirm: async () => {
+        try {
+          await doctorSoftDeletePatient(patientId);
+          navigation.popToTop();
+        } catch (e: any) {
+          Alert.alert('Erro', e.message ?? 'Não foi possível apagar.');
+        }
+      },
+    });
 
   // Agrupa as consultas por membro (null = titular) e conta por-responder/standby.
   const rows = useMemo<MemberRow[]>(() => {
@@ -73,7 +106,10 @@ export function DoctorFamilyMembersScreen({ route, navigation }: any) {
       patientId,
       patientName,
       patientPhone,
+      patientDob,
       memberId: r.memberId,
+      memberName: r.memberId ? r.label : null,
+      memberDob: r.memberId ? r.dob : null,
       filterMember: true,
       title: r.label,
     });
@@ -87,45 +123,57 @@ export function DoctorFamilyMembersScreen({ route, navigation }: any) {
   }
 
   return (
-    <FlatList
-      data={rows}
-      keyExtractor={(r) => r.memberId ?? '__titular__'}
-      renderItem={({ item }) => {
-        const age = formatAge(item.dob);
-        return (
-          <Pressable
-            onPress={() => openMember(item)}
-            style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
-          >
-            <View style={styles.nameRow}>
-              {item.unread && <View style={styles.unreadDot} />}
-              <Text style={styles.name} numberOfLines={1}>
-                {item.label}
-                {age ? <Text style={styles.age}>{`  ·  ${age}`}</Text> : null}
-              </Text>
-            </View>
-            <View style={styles.badges}>
-              {item.unanswered > 0 && (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>{item.unanswered} POR RESPONDER</Text>
-                </View>
-              )}
-              {item.standby > 0 && (
-                <View style={[styles.badge, styles.badgeStandby]}>
-                  <Text style={styles.badgeText}>{item.standby} EM STANDBY</Text>
-                </View>
-              )}
-            </View>
-          </Pressable>
-        );
-      }}
-      contentContainerStyle={styles.listContent}
-      ListEmptyComponent={<Text style={styles.empty}>Esta família ainda não tem consultas.</Text>}
-    />
+    <View style={styles.flex}>
+      <FlatList
+        data={rows}
+        keyExtractor={(r) => r.memberId ?? '__titular__'}
+        renderItem={({ item }) => {
+          const age = formatAge(item.dob);
+          return (
+            <Pressable
+              onPress={() => openMember(item)}
+              style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
+            >
+              <View style={styles.nameRow}>
+                {item.unread && <View style={styles.unreadDot} />}
+                <Text style={styles.name} numberOfLines={1}>
+                  {item.label}
+                  {age ? <Text style={styles.age}>{`  ·  ${age}`}</Text> : null}
+                </Text>
+              </View>
+              <View style={styles.badges}>
+                {item.unanswered > 0 && (
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>{item.unanswered} POR RESPONDER</Text>
+                  </View>
+                )}
+                {item.standby > 0 && (
+                  <View style={[styles.badge, styles.badgeStandby]}>
+                    <Text style={styles.badgeText}>{item.standby} EM STANDBY</Text>
+                  </View>
+                )}
+              </View>
+            </Pressable>
+          );
+        }}
+        contentContainerStyle={styles.listContent}
+        ListEmptyComponent={<Text style={styles.empty}>Esta família ainda não tem consultas.</Text>}
+      />
+
+      <OverlayMenu
+        visible={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        items={[
+          { label: 'Editar dados (titular)', onPress: goEditTitular },
+          { label: 'Apagar conta', danger: true, onPress: onDeleteTitular },
+        ]}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
   listContent: { padding: spacing.md },
   row: {

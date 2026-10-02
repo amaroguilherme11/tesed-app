@@ -13,6 +13,8 @@ export type Profile = {
   bio: string | null;
   consent_accepted_at: string | null;
   created_at: string;
+  /** Soft-delete pelo terapeuta (migração 0028). NULL = ativo. */
+  deleted_at?: string | null;
 };
 
 export type ConversationStatus = 'answered' | 'unanswered';
@@ -40,7 +42,7 @@ export type Attachment = {
 // ---- Fase 4: subscrições ----
 
 export type PlanType = 'individual' | 'family';
-export type CodeOrigin = 'free_consultation' | 'paid_website';
+export type CodeOrigin = 'free_consultation' | 'paid_website' | 'paid_manual';
 export type CodeStatus = 'active' | 'used' | 'revoked';
 
 /** Código de subscrição (grátis ou pago). */

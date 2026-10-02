@@ -59,6 +59,15 @@ export function parseDateBR(value: string): string | null {
   return `${yyyy}-${mm}-${dd}`;
 }
 
+/** Converte ISO "YYYY-MM-DD" para "DD/MM/AAAA" (para pré-preencher formulários). */
+export function formatDateBR(iso: string | null | undefined): string {
+  if (!iso) return '';
+  const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return '';
+  const [, yyyy, mm, dd] = m;
+  return `${dd}/${mm}/${yyyy}`;
+}
+
 const styles = StyleSheet.create({
   wrapper: { marginBottom: spacing.md },
   label: {

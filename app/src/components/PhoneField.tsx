@@ -16,6 +16,7 @@ const COUNTRIES: Country[] = [
   { code: 'BR', dial: '55', flag: '🇧🇷', name: 'Brasil' },
   { code: 'ES', dial: '34', flag: '🇪🇸', name: 'Espanha' },
   { code: 'FR', dial: '33', flag: '🇫🇷', name: 'França' },
+  { code: 'BE', dial: '32', flag: '🇧🇪', name: 'Bélgica' },
   { code: 'GB', dial: '44', flag: '🇬🇧', name: 'Reino Unido' },
   { code: 'DE', dial: '49', flag: '🇩🇪', name: 'Alemanha' },
   { code: 'CH', dial: '41', flag: '🇨🇭', name: 'Suíça' },

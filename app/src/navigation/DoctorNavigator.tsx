@@ -8,6 +8,8 @@ import { ConversationFilesScreen } from '@/screens/shared/ConversationFilesScree
 import { CodesScreen } from '@/screens/doctor/CodesScreen';
 import { DashboardScreen } from '@/screens/doctor/DashboardScreen';
 import { PatientsScreen } from '@/screens/doctor/PatientsScreen';
+import { DoctorEditProfileScreen } from '@/screens/doctor/DoctorEditProfileScreen';
+import { DoctorDeletedAccountsScreen } from '@/screens/doctor/DoctorDeletedAccountsScreen';
 import { HeaderSignOutButton } from '@/components/HeaderSignOutButton';
 import { HeaderTextButton } from '@/components/HeaderTextButton';
 import { HeaderLogoTitle } from '@/components/HeaderLogoTitle';
@@ -74,6 +76,16 @@ export function DoctorNavigator() {
         name="Patients"
         component={PatientsScreen}
         options={{ title: 'Pacientes' }}
+      />
+      <Stack.Screen
+        name="DoctorEditProfile"
+        component={DoctorEditProfileScreen}
+        options={{ title: 'Editar dados' }}
+      />
+      <Stack.Screen
+        name="DoctorDeletedAccounts"
+        component={DoctorDeletedAccountsScreen}
+        options={{ title: 'Contas apagadas' }}
       />
     </Stack.Navigator>
   );
