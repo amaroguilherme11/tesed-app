@@ -9,6 +9,9 @@ import {
 } from '@/lib/consultations';
 import { getMySubscription } from '@/lib/subscriptions';
 import { markConversationRead } from '@/lib/patientChats';
+import { removeMemberProfile } from '@/lib/family';
+import { confirmAction } from '@/lib/confirm';
+import { usePatientConversationsRealtime } from '@/hooks/useConversationsRealtime';
 import { useI18n } from '@/i18n';
 import { colors, spacing } from '@/theme';
 
@@ -37,9 +40,34 @@ export function ConsultationsListScreen({ route, navigation }: any) {
     }, [load]),
   );
 
+  // Bolinha "por ler" em tempo real (sem sair e voltar).
+  usePatientConversationsRealtime(load);
+
   useLayoutEffect(() => {
     navigation.setOptions({ title: title ?? t.nav.consultations });
   }, [navigation, title, t]);
+
+  // Remover este membro: só para dependentes (memberId != null), nunca o titular.
+  // Fica num botão discreto no rodapé da lista (fora das linhas de consulta), para
+  // acabar com os toques acidentais ao abrir uma consulta.
+  const onRemoveMember =
+    memberId != null
+      ? () =>
+          confirmAction({
+            title: t.home.removeMemberTitle,
+            message: t.home.removeMemberMsg(title ?? ''),
+            confirmLabel: t.common.remove,
+            destructive: true,
+            onConfirm: async () => {
+              try {
+                await removeMemberProfile(memberId);
+                navigation.goBack();
+              } catch (e: any) {
+                Alert.alert(t.home.removeMemberTitle, e.message ?? t.home.removeError);
+              }
+            },
+          })
+      : undefined;
 
   const openConsulta = (c: Consultation) => {
     if (c.is_open) markConversationRead(c.conversation_id); // já viu a resposta
@@ -82,6 +110,8 @@ export function ConsultationsListScreen({ route, navigation }: any) {
       creating={creating}
       onOpen={openConsulta}
       onNew={onNew}
+      onRemoveMember={onRemoveMember}
+      removeMemberLabel={t.home.removeMemberTitle}
     />
   );
 }

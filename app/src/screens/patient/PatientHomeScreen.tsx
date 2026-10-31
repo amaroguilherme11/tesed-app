@@ -12,7 +12,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '@/contexts/AuthContext';
 import { getMySubscription } from '@/lib/subscriptions';
-import { getMyMemberProfiles, removeMemberProfile } from '@/lib/family';
+import { getMyMemberProfiles } from '@/lib/family';
 import {
   Consultation,
   createConsultation,
@@ -20,7 +20,7 @@ import {
 } from '@/lib/consultations';
 import { ConsultationsList } from '@/components/ConsultationsList';
 import { markConversationRead } from '@/lib/patientChats';
-import { confirmAction } from '@/lib/confirm';
+import { usePatientConversationsRealtime } from '@/hooks/useConversationsRealtime';
 import { formatAge } from '@/lib/age';
 import { useI18n } from '@/i18n';
 import { HeaderTextButton } from '@/components/HeaderTextButton';
@@ -69,6 +69,10 @@ export function PatientHomeScreen({ navigation }: any) {
       reload();
     }, [reload]),
   );
+
+  // Atualiza em tempo real quando chega resposta do terapeuta (bolinha "por ler")
+  // sem o paciente ter de sair e voltar à lista.
+  usePatientConversationsRealtime(reload);
 
   const isActive = !!sub && sub.is_active;
   const isFamily = sub?.plan_type === 'family';
@@ -171,24 +175,6 @@ export function PatientHomeScreen({ navigation }: any) {
         title: r.isPersonal ? `${r.label} ${t.home.meParenthetical}` : r.label,
       });
 
-    const onRemove = (r: MemberRow) => {
-      if (!r.memberId) return;
-      confirmAction({
-        title: t.home.removeMemberTitle,
-        message: t.home.removeMemberMsg(r.label),
-        confirmLabel: t.common.remove,
-        destructive: true,
-        onConfirm: async () => {
-          try {
-            await removeMemberProfile(r.memberId!);
-            await reload();
-          } catch (e: any) {
-            setError(e.message ?? t.home.removeError);
-          }
-        },
-      });
-    };
-
     return (
       <View style={styles.container}>
         <Text style={styles.familyTitle}>{t.home.familyTitle(total, FAMILY_MAX)}</Text>
@@ -213,11 +199,6 @@ export function PatientHomeScreen({ navigation }: any) {
                   </Text>
                   {unread && <Text style={styles.unreadText}>{t.home.newReplyFromTherapist}</Text>}
                 </View>
-                {!item.isPersonal && (
-                  <Pressable onPress={() => onRemove(item)} hitSlop={8}>
-                    <Text style={styles.remove}>{t.common.remove}</Text>
-                  </Pressable>
-                )}
               </Pressable>
             );
           }}
@@ -276,7 +257,6 @@ const styles = StyleSheet.create({
   chatName: { fontSize: fontSize.base, fontWeight: '700', color: colors.text },
   tag: { fontWeight: '400', color: colors.primary, fontSize: fontSize.sm },
   age: { fontWeight: '400', color: colors.textMuted, fontSize: fontSize.sm },
-  remove: { color: colors.danger, fontSize: fontSize.sm, fontWeight: '600' },
   addRow: {
     borderRadius: radius.base,
     borderWidth: 1,

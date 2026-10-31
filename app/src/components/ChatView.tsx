@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -12,6 +12,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { useChat } from '@/hooks/useChat';
@@ -58,6 +59,38 @@ export function ChatView({
   const uid = session?.user.id ?? '';
   const { messages, loading, send, appendMessage } = useChat(conversationId);
   const [text, setText] = useState('');
+  // Rascunho persistente: o que está escrito e não enviado sobrevive a sair do
+  // chat / fechar a app (guardado por conversa em AsyncStorage). Repõe-se ao voltar.
+  const draftKey = `tesed.draft.${conversationId}`;
+  const draftLoaded = useRef(false);
+
+  useEffect(() => {
+    let active = true;
+    draftLoaded.current = false;
+    AsyncStorage.getItem(draftKey)
+      .then((v) => {
+        // Só repõe se o utilizador ainda não escreveu nada entretanto.
+        if (active && v) setText((cur) => (cur ? cur : v));
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (active) draftLoaded.current = true;
+      });
+    return () => {
+      active = false;
+    };
+  }, [draftKey]);
+
+  useEffect(() => {
+    // Não gravar antes de ter carregado (evita apagar o rascunho guardado com o '' inicial).
+    if (!draftLoaded.current) return;
+    const id = setTimeout(() => {
+      if (text) AsyncStorage.setItem(draftKey, text).catch(() => {});
+      else AsyncStorage.removeItem(draftKey).catch(() => {});
+    }, 400);
+    return () => clearTimeout(id);
+  }, [text, draftKey]);
+
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -90,6 +123,7 @@ export function ChatView({
     setSending(true);
     try {
       await send(body, uid);
+      AsyncStorage.removeItem(draftKey).catch(() => {}); // enviado: limpa o rascunho já
     } catch {
       setText(body); // repõe o texto se falhar
     } finally {
@@ -115,6 +149,7 @@ export function ChatView({
         });
         appendMessage(message); // eco otimista (o Realtime faz dedupe por id)
       }
+      if (caption) AsyncStorage.removeItem(draftKey).catch(() => {}); // legenda enviada
     } catch (e: any) {
       Alert.alert(t.chat.couldNotSendTitle, e.message ?? t.common.unknownError);
       if (caption) setText(caption); // repõe a legenda se falhar

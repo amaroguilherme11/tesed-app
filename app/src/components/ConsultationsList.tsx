@@ -30,12 +30,18 @@ export function ConsultationsList({
   creating,
   onOpen,
   onNew,
+  onRemoveMember,
+  removeMemberLabel,
 }: {
   consultations: Consultation[];
   isActive: boolean;
   creating: boolean;
   onOpen: (c: Consultation) => void;
   onNew: () => void;
+  /** Se definido, mostra um botão discreto no rodapé para remover este membro.
+   *  (Fica fora das linhas de consulta, para não se tocar sem querer ao abrir.) */
+  onRemoveMember?: () => void;
+  removeMemberLabel?: string;
 }) {
   const { t } = useI18n();
   const hasOpen = consultations.some((c) => c.is_open);
@@ -86,6 +92,13 @@ export function ConsultationsList({
             {t.consultations.emptyNone}{isActive ? t.consultations.emptyStartHint : ''}
           </Text>
         }
+        ListFooterComponent={
+          onRemoveMember ? (
+            <Pressable onPress={onRemoveMember} style={styles.removeMemberBtn} hitSlop={6}>
+              <Text style={styles.removeMemberText}>{removeMemberLabel}</Text>
+            </Pressable>
+          ) : null
+        }
       />
     </View>
   );
@@ -125,4 +138,6 @@ const styles = StyleSheet.create({
   meta: { fontSize: fontSize.sm, marginTop: 2 },
   metaOpen: { color: colors.primary, fontWeight: '600' },
   metaClosed: { color: colors.textMuted },
+  removeMemberBtn: { marginTop: spacing.xl, alignSelf: 'center', paddingVertical: spacing.md, paddingHorizontal: spacing.lg },
+  removeMemberText: { color: colors.danger, fontSize: fontSize.sm, fontWeight: '600', textDecorationLine: 'underline' },
 });
